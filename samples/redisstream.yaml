@@ -1,0 +1,11 @@
+apiVersion: sources.knative.dev/v1alpha1
+kind: RedisStreamSource
+metadata:
+  name: mystream
+spec:
+  stream: mystream
+  sink:
+    ref:
+      apiVersion: v1
+      kind: Service
+      name: event-display
