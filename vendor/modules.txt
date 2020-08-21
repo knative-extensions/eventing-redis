@@ -99,8 +99,6 @@ github.com/emicklei/go-restful
 github.com/emicklei/go-restful/log
 # github.com/evanphx/json-patch v4.5.0+incompatible
 github.com/evanphx/json-patch
-# github.com/ghodss/yaml v1.0.0
-github.com/ghodss/yaml
 # github.com/go-logr/logr v0.1.0
 github.com/go-logr/logr
 # github.com/go-openapi/jsonpointer v0.19.3
@@ -214,8 +212,6 @@ github.com/prometheus/statsd_exporter/pkg/mapper/fsm
 github.com/rickb777/date/period
 # github.com/rickb777/plural v1.2.1
 github.com/rickb777/plural
-# github.com/robfig/cron/v3 v3.0.1
-github.com/robfig/cron/v3
 # github.com/sirupsen/logrus v1.6.0
 github.com/sirupsen/logrus
 # github.com/spf13/pflag v1.0.5
@@ -844,23 +840,16 @@ k8s.io/utils/pointer
 k8s.io/utils/trace
 # knative.dev/eventing v0.16.1-0.20200806200629-e4bc346017b6
 ## explicit
-knative.dev/eventing/pkg/adapter/apiserver
-knative.dev/eventing/pkg/adapter/apiserver/events
 knative.dev/eventing/pkg/adapter/v2
 knative.dev/eventing/pkg/adapter/v2/util/crstatusevent
-knative.dev/eventing/pkg/apis/config
 knative.dev/eventing/pkg/apis/duck/v1
-knative.dev/eventing/pkg/apis/eventing
-knative.dev/eventing/pkg/apis/sources
-knative.dev/eventing/pkg/apis/sources/v1alpha2
-knative.dev/eventing/pkg/apis/sources/v1beta1
 knative.dev/eventing/pkg/configmap
 knative.dev/eventing/pkg/kncloudevents
 knative.dev/eventing/pkg/leaderelection
 knative.dev/eventing/pkg/logging
+knative.dev/eventing/pkg/reconciler/resources
 knative.dev/eventing/pkg/reconciler/source
 knative.dev/eventing/pkg/tracing
-knative.dev/eventing/pkg/utils
 knative.dev/eventing/pkg/utils/cache
 # knative.dev/pkg v0.0.0-20200816190606-6d1b0e90624b
 ## explicit
@@ -868,7 +857,6 @@ knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
 knative.dev/pkg/apis/duck/ducktypes
 knative.dev/pkg/apis/duck/v1
-knative.dev/pkg/apis/duck/v1alpha1
 knative.dev/pkg/apis/duck/v1beta1
 knative.dev/pkg/changeset
 knative.dev/pkg/client/injection/ducks/duck/v1/addressable
@@ -894,7 +882,6 @@ knative.dev/pkg/logging
 knative.dev/pkg/logging/logkey
 knative.dev/pkg/metrics
 knative.dev/pkg/metrics/metricskey
-knative.dev/pkg/metrics/testing
 knative.dev/pkg/network
 knative.dev/pkg/network/handlers
 knative.dev/pkg/profiling
@@ -903,7 +890,6 @@ knative.dev/pkg/resolver
 knative.dev/pkg/signals
 knative.dev/pkg/source
 knative.dev/pkg/system
-knative.dev/pkg/system/testing
 knative.dev/pkg/tracing
 knative.dev/pkg/tracing/config
 knative.dev/pkg/tracing/propagation

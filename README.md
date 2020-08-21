@@ -23,18 +23,22 @@ In this example, you create one Redis Stream source listening for items added to
 the `mystream` stream. The items are sent to the event display service as
 CloudEvent.
 
+Create a namespace:
+
+```sh
+kubectl create ns redex
+```
+
 Install the example by running this command:
 
 ```sh
-kubectl apply -n knative-sources -f samples/
+kubectl apply -n redex -f samples/
 ```
-
-Note: the example needs to be installed in the `knative-sources` namespace.
 
 Verify the source is ready:
 
 ```sh
-kubectl get  -n knative-sources redisstreamsources.sources.knative.dev mystream
+kubectl get  -n redex redisstreamsources.sources.knative.dev mystream
 NAME       AGE
 mystream   13m
 ```
@@ -50,7 +54,7 @@ kubectl exec -n redis svc/redis redis-cli xadd mystream '*' fruit banana
 Check the event display received the event:
 
 ```sh
-kubectl logs -n knative-sources svc/event-display
+kubectl logs -n redex svc/event-display
 ☁️  cloudevents.Event
 Validation: valid
 Context Attributes,
@@ -68,3 +72,13 @@ Data,
 ```
 
 The data contains the raw binary stream item.
+
+To cleanup, delete the redex namespace:
+
+```sh
+kubectl delete ns redex
+```
+
+## Release Notes
+
+- RedisStreamSource can now be deployment in any namespace (08/21/2020)

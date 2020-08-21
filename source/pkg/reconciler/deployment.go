@@ -64,7 +64,7 @@ func (r *DeploymentReconciler) ReconcileDeployment(ctx context.Context, owner km
 		}
 		return ra, newDeploymentCreated(ra.Namespace, ra.Name)
 	} else if err != nil {
-		return nil, fmt.Errorf("error getting receive adapter %q: %v", expected.Name, err)
+		return nil, fmt.Errorf("error getting deployment %q: %v", expected.Name, err)
 	} else if !metav1.IsControlledBy(ra, owner.GetObjectMeta()) {
 		return nil, fmt.Errorf("deployment %q is not owned by %s %q",
 			ra.Name, owner.GetGroupVersionKind().Kind, owner.GetObjectMeta().GetName())

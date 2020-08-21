@@ -22,11 +22,12 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
-	reconcilersource "knative.dev/eventing/pkg/reconciler/source"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
-	"knative.dev/pkg/logging"
 	pkgreconciler "knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
+
+	eventingresources "knative.dev/eventing/pkg/reconciler/resources"
+	reconcilersource "knative.dev/eventing/pkg/reconciler/source"
 
 	sourcesv1alpha1 "knative.dev/eventing-redis/source/pkg/apis/sources/v1alpha1"
 	streamsourcereconciler "knative.dev/eventing-redis/source/pkg/client/injection/reconciler/sources/v1alpha1/redisstreamsource"
@@ -35,7 +36,8 @@ import (
 )
 
 const (
-	component = "redisstreamsource"
+	component              = "redisstreamsource"
+	adapterClusterRoleName = "knative-sources-redisstream-adapter"
 )
 
 func newWarningSinkNotFound(sink *duckv1.Destination) pkgreconciler.Event {
@@ -47,6 +49,8 @@ func newWarningSinkNotFound(sink *duckv1.Destination) pkgreconciler.Event {
 type Reconciler struct {
 	kubeClientSet       kubernetes.Interface
 	dr                  *reconciler.DeploymentReconciler
+	rbr                 *reconciler.RoleBindingReconciler
+	sar                 *reconciler.ServiceAccountReconciler
 	receiveAdapterImage string
 	ceSource            string
 	sinkResolver        *resolver.URIResolver
@@ -56,6 +60,8 @@ type Reconciler struct {
 var _ streamsourcereconciler.Interface = (*Reconciler)(nil)
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.RedisStreamSource) pkgreconciler.Event {
+	source.Annotations = nil
+
 	dest := source.Spec.Sink.DeepCopy()
 	if dest.Ref != nil {
 		if dest.Ref.Namespace == "" {
@@ -65,25 +71,35 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.
 
 	sinkURI, err := r.sinkResolver.URIFromDestinationV1(*dest, source)
 	if err != nil {
-		//source.Status.MarkNoSink("NotFound", "")
+		source.Status.MarkNoSink("NotFound", "")
 		return newWarningSinkNotFound(dest)
 	}
-	//source.Status.MarkSink(sinkURI)
+	source.Status.MarkSink(sinkURI.String())
 
-	ra, event := r.dr.ReconcileDeployment(ctx, source, resources.MakeReceiveAdapter(&resources.ReceiveAdapterArgs{
-		Image:   r.receiveAdapterImage,
-		Source:  source,
-		Labels:  resources.Labels(source.Name),
-		SinkURI: sinkURI.String(),
-	}))
-
-	if ra != nil {
-		source.Status.PropagateDeploymentAvailability(ra)
-	}
-	if event != nil {
-		logging.FromContext(ctx).Infof("returning because event from ReconcileDeployment")
+	expectedServiceAccount := eventingresources.MakeServiceAccount(source, resources.ServiceAccountName(source))
+	sa, event := r.sar.ReconcileServiceAccount(ctx, source, expectedServiceAccount)
+	if sa == nil {
+		source.Status.MarkNoServiceAccount(event.Error())
 		return event
 	}
+
+	expectedRoleBinding := resources.MakeRoleBinding(source, adapterClusterRoleName)
+	rb, event := r.rbr.ReconcileRoleBinding(ctx, source, expectedRoleBinding)
+	if rb == nil {
+		source.Status.MarkNoRoleBinding(event.Error())
+		return event
+	}
+
+	expectedDeployment := resources.MakeReceiveAdapter(source, r.receiveAdapterImage, sinkURI.String())
+	ra, event := r.dr.ReconcileDeployment(ctx, source, expectedDeployment)
+	if ra == nil {
+		if source.Status.Annotations == nil {
+			source.Status.Annotations = make(map[string]string)
+		}
+		source.Status.Annotations["Deployment"] = event.Error()
+		return event
+	}
+	source.Status.PropagateDeploymentAvailability(ra)
 
 	return nil
 }

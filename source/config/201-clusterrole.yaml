@@ -36,9 +36,15 @@ rules:
   verbs:
   - list
 - apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - rolebindings
+  verbs: *everything
+- apiGroups:
   - ""
   resources:
   - events
+  - serviceaccounts
   verbs:
   - get
   - list

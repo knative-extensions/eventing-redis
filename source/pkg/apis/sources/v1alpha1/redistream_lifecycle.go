@@ -115,3 +115,34 @@ func (s *RedisStreamSourceStatus) PropagateDeploymentAvailability(d *appsv1.Depl
 func (s *RedisStreamSourceStatus) IsReady() bool {
 	return redisStreamCondSet.Manage(s).IsHappy()
 }
+
+// MarkNoRoleBinding sets the annotation that the source does not have a role binding
+func (s *RedisStreamSourceStatus) MarkNoRoleBinding(reason string) {
+	s.setAnnotation("roleBinding", reason)
+}
+
+// MarkRoleBinding sets the annotation that the source has a role binding
+func (s *RedisStreamSourceStatus) MarkRoleBinding() {
+	s.clearAnnotation("roleBinding")
+}
+
+// MarkNoServiceAccount sets the annotation that the source does not have a service account
+func (s *RedisStreamSourceStatus) MarkNoServiceAccount(reason string) {
+	s.setAnnotation("serviceAccount", reason)
+}
+
+// MarkRoleBinding sets the annotation that the source has a service account
+func (s *RedisStreamSourceStatus) MarkServiceAccount() {
+	s.clearAnnotation("serviceAccount")
+}
+
+func (s *RedisStreamSourceStatus) setAnnotation(name, value string) {
+	if s.Annotations == nil {
+		s.Annotations = make(map[string]string)
+	}
+	s.Annotations[name] = value
+}
+
+func (s *RedisStreamSourceStatus) clearAnnotation(name string) {
+	delete(s.Annotations, name)
+}
