@@ -1,5 +1,5 @@
 /*
-Copyright 2019 The Knative Authors
+Copyright 2020 The Knative Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@ import (
 	"context"
 	"fmt"
 	"time"
+
+	scan "knative.dev/eventing-redis/source/pkg/redis"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/gomodule/redigo/redis"
@@ -89,62 +91,24 @@ func (a *Adapter) toEvent(values []interface{}) (*cloudevents.Event, error) {
 	if len(values) != 1 {
 		return nil, fmt.Errorf("number of values not equal to one (got %d)", len(values))
 	}
-	streamValues := values[0]
 
-	a.logger.Info("streamValues", zap.Any("streamValues", streamValues))
-
-	streamValue, err := redis.Values(streamValues, nil)
-	if err != nil {
-		return nil, err
-	}
-	a.logger.Info("streamValue", zap.Any("streamValue", streamValue))
-
-	stream, err := redis.String(streamValue[0], nil)
-	if err != nil {
-		return nil, err
-	}
-	a.logger.Info("stream", zap.Any("stream", stream))
-
-	elems, err := redis.Values(streamValue[1], nil)
+	elems, err := scan.ScanStreamResult(values, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	// Assert only one element
-	if len(elems) != 1 {
-		return nil, fmt.Errorf("number of elementss not equal to one (got %d)", len(elems))
+	// Assert only one item
+	if len(elems[0].Items) != 1 {
+		return nil, fmt.Errorf("number of items not equal to one (got %d)", len(elems[0].Items))
 	}
 
-	idelem, err := redis.Values(elems[0], nil)
-	if err != nil {
-		return nil, err
-	}
-
-	id, err := redis.String(idelem[0], nil)
-	if err != nil {
-		return nil, err
-	}
-
-	a.logger.Info("id", zap.Any("id", id))
-
-	fieldvalues, err := redis.Values(idelem[1], nil)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, fieldvalue := range fieldvalues {
-		v, err := redis.String(fieldvalue, nil)
-		if err != nil {
-			return nil, err
-		}
-		a.logger.Info("field", zap.Any("field", v))
-	}
+	item := elems[0].Items[0]
 
 	event := cloudevents.NewEvent()
 	event.SetType(RedisStreamSourceEventType)
 	event.SetSource(a.source)
-	event.SetData(cloudevents.ApplicationJSON, fieldvalues)
-	event.SetID(id)
+	event.SetData(cloudevents.ApplicationJSON, item.FieldValues)
+	event.SetID(item.ID)
 
 	return &event, nil
 }
