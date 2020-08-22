@@ -13,15 +13,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package adapter
+
+package resources
 
 import (
-	"knative.dev/eventing/pkg/adapter/v2"
+	"fmt"
+
+	"knative.dev/pkg/kmeta"
 )
 
-type Config struct {
-	adapter.EnvConfig
-
-	Address string `envconfig:"ADDRESS" required:"true"`
-	Stream  string `envconfig:"STREAM" required:"true"`
+func ServiceAccountName(source kmeta.OwnerRefable) string {
+	return kmeta.ChildName(fmt.Sprintf("redistreamsource-%s-", source.GetObjectMeta().GetName()), string(source.GetObjectMeta().GetUID()))
 }

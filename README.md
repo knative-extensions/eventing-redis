@@ -39,11 +39,9 @@ Verify the source is ready:
 
 ```sh
 kubectl get  -n redex redisstreamsources.sources.knative.dev mystream
-NAME       AGE
-mystream   13m
+NAME       SINK                                            AGE   READY   REASON
+mystream   http://event-display.redex.svc.cluster.local/   38s   True
 ```
-
-NOTE: there is no ready status yet
 
 Add an item to `mystream`:
 
@@ -82,3 +80,4 @@ kubectl delete ns redex
 ## Release Notes
 
 - RedisStreamSource can now be deployment in any namespace (08/21/2020)
+- The redis address can now be specified in RedisStreamSource (08/21/2020)

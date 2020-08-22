@@ -130,7 +130,6 @@ github.com/golang/protobuf/ptypes/wrappers
 ## explicit
 github.com/gomodule/redigo/redis
 # github.com/google/go-cmp v0.5.1
-## explicit
 github.com/google/go-cmp/cmp
 github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags

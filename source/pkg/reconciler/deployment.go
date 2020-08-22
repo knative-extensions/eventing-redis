@@ -19,13 +19,13 @@ import (
 	"context"
 	"fmt"
 
+	"k8s.io/apimachinery/pkg/api/equality"
+
 	"go.uber.org/zap"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/logging"
@@ -68,7 +68,7 @@ func (r *DeploymentReconciler) ReconcileDeployment(ctx context.Context, owner km
 	} else if !metav1.IsControlledBy(ra, owner.GetObjectMeta()) {
 		return nil, fmt.Errorf("deployment %q is not owned by %s %q",
 			ra.Name, owner.GetGroupVersionKind().Kind, owner.GetObjectMeta().GetName())
-	} else if r.podSpecImageSync(expected.Spec.Template.Spec, ra.Spec.Template.Spec) {
+	} else if r.podSpecChanged(expected.Spec.Template.Spec, ra.Spec.Template.Spec) {
 		if ra, err = r.KubeClientSet.AppsV1().Deployments(namespace).Update(ra); err != nil {
 			return ra, err
 		}
@@ -79,46 +79,7 @@ func (r *DeploymentReconciler) ReconcileDeployment(ctx context.Context, owner km
 	return ra, nil
 }
 
-func (r *DeploymentReconciler) FindOwned(ctx context.Context, owner kmeta.OwnerRefable, selector labels.Selector) (*appsv1.Deployment, error) {
-	dl, err := r.KubeClientSet.AppsV1().Deployments(owner.GetObjectMeta().GetNamespace()).List(metav1.ListOptions{
-		LabelSelector: selector.String(),
-	})
-	if err != nil {
-		logging.FromContext(ctx).Error("Unable to list deployments: %v", zap.Error(err))
-		return nil, err
-	}
-	for _, dep := range dl.Items {
-		if metav1.IsControlledBy(&dep, owner.GetObjectMeta()) {
-			return &dep, nil
-		}
-	}
-	return nil, apierrors.NewNotFound(schema.GroupResource{}, "")
-}
-
-func getContainer(name string, spec corev1.PodSpec) (int, *corev1.Container) {
-	for i, c := range spec.Containers {
-		if c.Name == name {
-			return i, &c
-		}
-	}
-	return -1, nil
-}
-
 // Returns false if an update is needed.
-func (r *DeploymentReconciler) podSpecImageSync(expected corev1.PodSpec, now corev1.PodSpec) bool {
-	// got needs all of the containers that want as, but it is allowed to have more.
-	dirty := false
-	for _, ec := range expected.Containers {
-		n, nc := getContainer(ec.Name, now)
-		if nc == nil {
-			now.Containers = append(now.Containers, ec)
-			dirty = true
-			continue
-		}
-		if nc.Image != ec.Image {
-			now.Containers[n].Image = ec.Image
-			dirty = true
-		}
-	}
-	return dirty
+func (r *DeploymentReconciler) podSpecChanged(expected corev1.PodSpec, now corev1.PodSpec) bool {
+	return !equality.Semantic.DeepDerivative(expected, now)
 }

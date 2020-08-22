@@ -13,15 +13,24 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package adapter
+
+package resources
 
 import (
-	"knative.dev/eventing/pkg/adapter/v2"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"knative.dev/pkg/kmeta"
 )
 
-type Config struct {
-	adapter.EnvConfig
-
-	Address string `envconfig:"ADDRESS" required:"true"`
-	Stream  string `envconfig:"STREAM" required:"true"`
+// MakeServiceAccount creates a ServiceAccount object for the given referable object
+func MakeServiceAccount(obj kmeta.OwnerRefable, name string) *corev1.ServiceAccount {
+	return &corev1.ServiceAccount{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: obj.GetObjectMeta().GetNamespace(),
+			Name:      name,
+			OwnerReferences: []metav1.OwnerReference{
+				*kmeta.NewControllerRef(obj),
+			},
+		},
+	}
 }

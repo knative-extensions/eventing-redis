@@ -3,6 +3,7 @@ kind: RedisStreamSource
 metadata:
   name: mystream
 spec:
+  address: "redis.redis.svc.cluster.local:6379"
   stream: mystream
   sink:
     ref:

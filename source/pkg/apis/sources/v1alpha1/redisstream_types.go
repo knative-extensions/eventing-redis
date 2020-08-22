@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"knative.dev/pkg/apis"
@@ -57,8 +58,55 @@ type RedisStreamSourceSpec struct {
 	//   and modifications of the event sent to the sink.
 	duckv1.SourceSpec `json:",inline"`
 
+	// RedisConnection represents the address and options to connect
+	// to a Redis instance
+	RedisConnection `json:",inline"`
+
 	// Stream is the name of the stream.
 	Stream string `json:"stream"`
+}
+
+// RedisConnection defines the address and options to connect to a Redis instance
+type RedisConnection struct {
+	// Address is the Redis TCP address
+	Address string `json:"address"`
+
+	// Options are the connection options
+	// +optional
+	Options *RedisConnectionOptions `json:"dialOptions,omitempty"`
+}
+
+// RedisConnection defines the desired state of the RedisStreamSource.
+type RedisConnectionOptions struct {
+	// Password to use for connecting to Redis
+	// +optional
+	Password corev1.ObjectReference `json:"password,omitempty"`
+
+	// UseTLS indicates whether to use TLS or not
+	// +optional
+	UseTLS bool `json:"useTLS,omitempty"`
+
+	// SkipVerify indicates whether to skip TLS verification or not
+	// +optional
+	SkipVerify bool `json:"skipVerify,omitempty"`
+
+	// Cert is the Kubernetes secret containing the client certificate.
+	// +optional
+	Cert RedisSecretValueFromSource `json:"cert,omitempty"`
+
+	// Key is the Kubernetes secret containing the client key.
+	// +optional
+	Key RedisSecretValueFromSource `json:"key,omitempty"`
+
+	// CACert is the Kubernetes secret containing the server CA cert.
+	// +optional
+	CACert RedisSecretValueFromSource `json:"caCert,omitempty"`
+}
+
+// RedisSecretValueFromSource represents the source of a secret value
+type RedisSecretValueFromSource struct {
+	// The Secret key to select from.
+	SecretKeyRef *corev1.SecretKeySelector `json:"secretKeyRef,omitempty"`
 }
 
 // RedisStreamSourceStatus defines the observed state of RedisStreamSource.

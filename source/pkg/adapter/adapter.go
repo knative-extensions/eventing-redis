@@ -55,8 +55,7 @@ func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClie
 }
 
 func (a *Adapter) Start(ctx context.Context) error {
-	pool := newPool()
-	conn, err := pool.Dial()
+	conn, err := redis.Dial("tcp", a.config.Address)
 	if err != nil {
 		return err
 	}
@@ -82,24 +81,6 @@ func (a *Adapter) Start(ctx context.Context) error {
 			//  Event is lost.
 			a.logger.Error("failed to send cloudevent", zap.Any("result", result))
 		}
-	}
-}
-
-func newPool() *redis.Pool {
-	return &redis.Pool{
-		// Maximum number of idle connections in the pool.
-		MaxIdle: 80,
-		// max number of connections
-		MaxActive: 12000,
-		// Dial is an application supplied function for creating and
-		// configuring a connection.
-		Dial: func() (redis.Conn, error) {
-			c, err := redis.Dial("tcp", "redis.redis.svc.cluster.local:6379")
-			if err != nil {
-				panic(err.Error())
-			}
-			return c, err
-		},
 	}
 }
 
