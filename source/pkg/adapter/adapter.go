@@ -18,6 +18,7 @@ package adapter
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -50,7 +51,7 @@ func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClie
 	config := processed.(*Config)
 	return &Adapter{
 		config: config,
-		logger: logging.FromContext(ctx).Desugar(),
+		logger: logging.FromContext(ctx).Desugar().With(zap.String("stream", config.Stream)),
 		client: ceClient,
 		source: fmt.Sprintf("%s/%s", config.Address, config.Stream),
 	}
@@ -62,14 +63,37 @@ func (a *Adapter) Start(ctx context.Context) error {
 		return err
 	}
 
-	a.logger.Info("Listening stream", zap.String("name", a.config.Stream))
+	// TODO: get it from spec
+	groupName := "group"
+
+	a.logger.Info("Retrieving group info", zap.String("group", groupName))
+	groups, err := scan.ScanXInfoGroupReply(conn.Do("XINFO", "GROUPS", a.config.Stream))
+	if err != nil {
+		return err
+	}
+
+	if _, ok := groups[groupName]; ok {
+		a.logger.Info("Reusing consumer group", zap.String("group", groupName))
+		// TODO: process pending messages
+	} else {
+		a.logger.Info("Creating consumer group", zap.String("group", groupName))
+		_, err := conn.Do("XGROUP", "CREATE", a.config.Stream, groupName, "$")
+		if err != nil {
+			return err
+		}
+	}
+
+	// TODO: get it from statefulset pod name
+	consumerName := "consumer-0"
+
+	a.logger.Info("Listening for messages")
 
 	for {
-		reply, err := redis.Values(conn.Do("XREAD", "COUNT", 1, "BLOCK", 0, "STREAMS", a.config.Stream, "$"))
+		reply, err := conn.Do("XREADGROUP", "GROUP", groupName, consumerName, "COUNT", 1, "BLOCK", 0, "STREAMS", a.config.Stream, ">")
 
 		if err != nil {
 			a.logger.Error("cannot read from stream", zap.Error(err))
-			time.Sleep(500 * time.Millisecond)
+			time.Sleep(1 * time.Second)
 			continue
 		}
 
@@ -83,16 +107,26 @@ func (a *Adapter) Start(ctx context.Context) error {
 			//  Event is lost.
 			a.logger.Error("failed to send cloudevent", zap.Any("result", result))
 		}
+
+		_, err = conn.Do("XACK", a.config.Stream, groupName, event.ID())
+		if err != nil {
+			a.logger.Error("cannot ack message", zap.Error(err))
+		}
 	}
 }
 
-func (a *Adapter) toEvent(values []interface{}) (*cloudevents.Event, error) {
+func (a *Adapter) toEvent(reply interface{}) (*cloudevents.Event, error) {
+	values, err := redis.Values(reply, nil)
+	if err != nil {
+		return nil, errors.New("expected a reply of type array")
+	}
+
 	// Assert only one stream
 	if len(values) != 1 {
 		return nil, fmt.Errorf("number of values not equal to one (got %d)", len(values))
 	}
 
-	elems, err := scan.ScanStreamResult(values, nil)
+	elems, err := scan.ScanXReadReply(values, nil)
 	if err != nil {
 		return nil, err
 	}

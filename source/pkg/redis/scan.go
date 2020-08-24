@@ -17,6 +17,7 @@ limitations under the License.
 package scan
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/gomodule/redigo/redis"
@@ -48,10 +49,9 @@ type StreamItem struct {
 	FieldValues interface{}
 }
 
-func ScanStreamResult(src []interface{}, dst StreamElements) (StreamElements, error) {
+func ScanXReadReply(src []interface{}, dst StreamElements) (StreamElements, error) {
 	if dst == nil || len(dst) != len(src) {
-		se := make(StreamElements, len(src))
-		dst = se
+		dst = make(StreamElements, len(src))
 	}
 
 	for i, stream := range src {
@@ -100,6 +100,84 @@ func ScanStreamResult(src []interface{}, dst StreamElements) (StreamElements, er
 			}
 			dst[i].Items[j].ID = id
 			dst[i].Items[j].FieldValues = item[1]
+		}
+	}
+	return dst, nil
+}
+
+//XINFO GROUPS mystream
+//1) 1) name
+//2) "mygroup"
+//3) consumers
+//4) (integer) 2
+//5) pending
+//6) (integer) 2
+//7) last-delivered-id
+//8) "1588152489012-0"
+//2) 1) name
+//2) "some-other-group"
+//3) consumers
+//4) (integer) 1
+//5) pending
+//6) (integer) 0
+//7) last-delivered-id
+//8) "1588152498034-0"
+
+type StreamGroups map[string]StreamGroup
+
+type StreamGroup struct {
+	// Consumers is the number of consumers in the group
+	Consumers int
+	// Pending is the number of the pending messages (not ACKED)
+	Pending int
+	// LastDeliveredId is the ID of the last delivered item
+	LastDeliveredId string
+}
+
+func ScanXInfoGroupReply(reply interface{}, err error) (StreamGroups, error) {
+	if err != nil {
+		return nil, err
+	}
+	groups, err := redis.Values(reply, nil)
+	if err != nil {
+		return nil, errors.New("expected a reply of type array")
+	}
+	dst := make(StreamGroups)
+
+	for _, group := range groups {
+		entries, err := redis.Values(group, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(entries) != 8 {
+			return nil, fmt.Errorf("unexpected group reply size (%d)", len(entries))
+		}
+
+		name, err := redis.String(entries[1], nil)
+		if err != nil {
+			return nil, err
+		}
+
+		consumers, err := redis.Int(entries[3], nil)
+		if err != nil {
+			return nil, err
+		}
+
+		pending, err := redis.Int(entries[5], nil)
+		if err != nil {
+			return nil, err
+		}
+
+		lastid, err := redis.String(entries[7], nil)
+		if err != nil {
+			return nil, err
+		}
+
+		dst[name] = StreamGroup{
+			Consumers:       consumers,
+			Pending:         pending,
+			LastDeliveredId: lastid,
 		}
 	}
 	return dst, nil

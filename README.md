@@ -79,5 +79,6 @@ kubectl delete ns redex
 
 ## Release Notes
 
+- Consume stream via a consumer group (internal change) (08/24/2020)
 - RedisStreamSource can now be deployment in any namespace (08/21/2020)
 - The redis address can now be specified in RedisStreamSource (08/21/2020)

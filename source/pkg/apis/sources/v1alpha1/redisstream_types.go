@@ -64,6 +64,12 @@ type RedisStreamSourceSpec struct {
 
 	// Stream is the name of the stream.
 	Stream string `json:"stream"`
+
+	// Group is the name of the consumer group associated to this source.
+	// When left empty, a group is automatically created for this source and
+	// deleted when this source is deleted.
+	// +optional
+	Group string `json:"group,omitempty"`
 }
 
 // RedisConnection defines the address and options to connect to a Redis instance
@@ -119,6 +125,9 @@ type RedisStreamSourceStatus struct {
 	// * SinkURI - the current active sink URI that has been configured for the
 	//   Source.
 	duckv1.SourceStatus `json:",inline"`
+
+	// Group is the actual name of the consumer group associated to this source
+	Group string `json:",group"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

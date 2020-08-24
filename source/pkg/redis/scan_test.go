@@ -30,7 +30,7 @@ import (
 //         2) 1) "foo"
 //            2) "value_2"
 
-func TestScanStream(t *testing.T) {
+func TestScanXRead(t *testing.T) {
 	tests := []struct {
 		reply    []interface{}
 		expected StreamElements
@@ -60,7 +60,7 @@ func TestScanStream(t *testing.T) {
 		},
 	}
 	for _, tc := range tests {
-		actual, err := ScanStreamResult(tc.reply, nil)
+		actual, err := ScanXReadReply(tc.reply, nil)
 		if err != nil {
 			t.Errorf("Unexpected error: %v", err)
 		}
