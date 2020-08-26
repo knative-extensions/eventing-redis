@@ -58,7 +58,9 @@ func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClie
 }
 
 func (a *Adapter) Start(ctx context.Context) error {
-	conn, err := redis.Dial("tcp", a.config.Address)
+	pool := newPool(a.config.Address)
+
+	conn, err := pool.Dial()
 	if err != nil {
 		return err
 	}
@@ -82,36 +84,64 @@ func (a *Adapter) Start(ctx context.Context) error {
 			return err
 		}
 	}
+	conn.Close()
 
-	// TODO: get it from statefulset pod name
-	consumerName := "consumer-0"
+	for i := 0; i < 100; i++ {
+		go func() {
+			conn, _ := pool.Dial()
 
-	a.logger.Info("Listening for messages")
+			// TODO: get it from statefulset pod name
+			consumerName := fmt.Sprintf("consumer-%d", i)
 
-	for {
-		reply, err := conn.Do("XREADGROUP", "GROUP", groupName, consumerName, "COUNT", 1, "BLOCK", 0, "STREAMS", a.config.Stream, ">")
+			a.logger.Info("Listening for messages")
 
-		if err != nil {
-			a.logger.Error("cannot read from stream", zap.Error(err))
-			time.Sleep(1 * time.Second)
-			continue
-		}
+			for {
+				reply, err := conn.Do("XREADGROUP", "GROUP", groupName, consumerName, "COUNT", 1, "BLOCK", 0, "STREAMS", a.config.Stream, ">")
 
-		event, err := a.toEvent(reply)
-		if err != nil {
-			a.logger.Error("cannot convert reply", zap.Error(err))
-			continue
-		}
+				if err != nil {
+					a.logger.Error("cannot read from stream", zap.Error(err))
+					time.Sleep(1 * time.Second)
+					continue
+				}
 
-		if result := a.client.Send(ctx, *event); !cloudevents.IsACK(result) {
-			//  Event is lost.
-			a.logger.Error("failed to send cloudevent", zap.Any("result", result))
-		}
+				event, err := a.toEvent(reply)
+				if err != nil {
+					a.logger.Error("cannot convert reply", zap.Error(err))
+					continue
+				}
 
-		_, err = conn.Do("XACK", a.config.Stream, groupName, event.ID())
-		if err != nil {
-			a.logger.Error("cannot ack message", zap.Error(err))
-		}
+				if result := a.client.Send(ctx, *event); !cloudevents.IsACK(result) {
+					//  Event is lost.
+					a.logger.Error("failed to send cloudevent", zap.Any("result", result))
+				}
+
+				_, err = conn.Do("XACK", a.config.Stream, groupName, event.ID())
+				if err != nil {
+					a.logger.Error("cannot ack message", zap.Error(err))
+				}
+			}
+		}()
+	}
+
+	<-ctx.Done()
+	return nil
+}
+
+func newPool(address string) *redis.Pool {
+	return &redis.Pool{
+		// Maximum number of idle connections in the pool.
+		MaxIdle: 80,
+		// max number of connections
+		MaxActive: 12000,
+		// Dial is an application supplied function for creating and
+		// configuring a connection.
+		Dial: func() (redis.Conn, error) {
+			c, err := redis.Dial("tcp", address)
+			if err != nil {
+				panic(err.Error())
+			}
+			return c, err
+		},
 	}
 }
 
