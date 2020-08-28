@@ -14,19 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package sources
-
-import (
-	"k8s.io/apimachinery/pkg/runtime/schema"
-)
-
-const (
-	GroupName = "sources.knative.dev"
-)
-
-var (
-	RedisStreamSourceResource = schema.GroupResource{
-		Group:    GroupName,
-		Resource: "redisstreamsources",
-	}
-)
+// Package v1alpha1 contains API Schema definitions for the sinks v1alpha1 API group
+// +k8s:deepcopy-gen=package
+// +groupName=sources.knative.dev
+package v1alpha1

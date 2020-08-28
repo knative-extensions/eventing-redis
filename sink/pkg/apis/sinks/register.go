@@ -14,19 +14,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package sources
+package sinks
 
 import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 const (
-	GroupName = "sources.knative.dev"
+	GroupName = "sinks.knative.dev"
 )
 
 var (
-	RedisStreamSourceResource = schema.GroupResource{
+	RedisStreamSinkResource = schema.GroupResource{
 		Group:    GroupName,
-		Resource: "redisstreamsources",
+		Resource: "redisstreamsinks",
 	}
 )

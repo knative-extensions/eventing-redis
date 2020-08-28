@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The Knative Authors
+Copyright 2019 The Knative Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,19 +14,27 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package sources
+package main
 
 import (
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"log"
+
+	"knative.dev/eventing-redis/sink/pkg/receiver"
+	adapter "knative.dev/eventing/pkg/adapter/v2"
+	"knative.dev/pkg/signals"
+
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 )
 
-const (
-	GroupName = "sources.knative.dev"
-)
+func main() {
+	ctx := signals.NewContext()
+	env := adapter.ConstructEnvOrDie(receiver.NewEnvConfig)
+	r := receiver.NewReceiver(ctx, env)
 
-var (
-	RedisStreamSourceResource = schema.GroupResource{
-		Group:    GroupName,
-		Resource: "redisstreamsources",
+	c, err := cloudevents.NewDefaultClient()
+	if err != nil {
+		log.Fatal("Failed to create client, ", err)
 	}
-)
+
+	log.Fatal(c.StartReceiver(ctx, r.Receive))
+}

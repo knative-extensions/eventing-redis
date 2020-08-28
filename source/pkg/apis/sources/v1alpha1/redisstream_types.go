@@ -39,7 +39,7 @@ type RedisStreamSource struct {
 	Status RedisStreamSourceStatus `json:"status,omitempty"`
 }
 
-// Check the interfaces that PingSource should be implementing.
+// Check the interfaces that RedisStreamSource should be implementing.
 var (
 	_ runtime.Object     = (*RedisStreamSource)(nil)
 	_ kmeta.OwnerRefable = (*RedisStreamSource)(nil)
@@ -139,7 +139,7 @@ type RedisStreamSourceList struct {
 	Items           []RedisStreamSource `json:"items"`
 }
 
-// GetStatus retrieves the status of the PingSource. Implements the KRShaped interface.
+// GetStatus retrieves the status of the RedisStreamSource. Implements the KRShaped interface.
 func (p *RedisStreamSource) GetStatus() *duckv1.Status {
 	return &p.Status.Status
 }

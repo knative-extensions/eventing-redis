@@ -14,19 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package sources
+package resources
 
 import (
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"knative.dev/pkg/kmeta"
 )
 
-const (
-	GroupName = "sources.knative.dev"
-)
-
-var (
-	RedisStreamSourceResource = schema.GroupResource{
-		Group:    GroupName,
-		Resource: "redisstreamsources",
-	}
-)
+func ServiceAccountName(source kmeta.OwnerRefable) string {
+	return kmeta.ChildName("redistreamsink", source.GetObjectMeta().GetName())
+}

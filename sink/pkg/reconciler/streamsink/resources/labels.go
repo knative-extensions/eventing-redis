@@ -14,19 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package sources
-
-import (
-	"k8s.io/apimachinery/pkg/runtime/schema"
-)
+package resources
 
 const (
-	GroupName = "sources.knative.dev"
+	// controllerAgentName is the string used by this controller to identify
+	// itself when creating events.
+	controllerAgentName = "redisstream-sink-controller"
 )
 
-var (
-	RedisStreamSourceResource = schema.GroupResource{
-		Group:    GroupName,
-		Resource: "redisstreamsources",
+func Labels(name string) map[string]string {
+	return map[string]string{
+		"eventing.knative.dev/sink":     controllerAgentName,
+		"eventing.knative.dev/sinkName": name,
 	}
-)
+}

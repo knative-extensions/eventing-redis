@@ -13,20 +13,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-
-package sources
+package receiver
 
 import (
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"knative.dev/eventing/pkg/adapter/v2"
 )
 
-const (
-	GroupName = "sources.knative.dev"
-)
+type Config struct {
+	adapter.EnvConfig
 
-var (
-	RedisStreamSourceResource = schema.GroupResource{
-		Group:    GroupName,
-		Resource: "redisstreamsources",
-	}
-)
+	Address string `envconfig:"ADDRESS" required:"true"`
+	Stream  string `envconfig:"STREAM" required:"true"`
+}
