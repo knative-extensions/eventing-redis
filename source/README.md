@@ -45,7 +45,7 @@ mystream   http://event-display.redex.svc.cluster.local/   38s   True
 Add an item to `mystream`:
 
 ```sh
-kubectl exec -n redis svc/redis redis-cli xadd mystream '*' fruit banana
+kubectl exec -n redis svc/redis redis-cli xadd mystream '*' fruit banana color yellow
 ```
 
 Check the event display received the event:
@@ -63,12 +63,14 @@ Context Attributes,
   datacontenttype: application/json
 Data,
   [
-    "ZnJ1aXQ=",
-    "YmFuYW5h"
+    "fruit",
+    "banana"
+    "color",
+    "yellow"
   ]
 ```
 
-The data contains the raw binary stream item.
+The data contains the list of field-value pairs added to the stream.
 
 To cleanup, delete the redex namespace:
 

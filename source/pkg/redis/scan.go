@@ -46,7 +46,7 @@ type StreamItem struct {
 	ID string
 
 	// FieldValue represent the unscan list of field-value pairs
-	FieldValues interface{}
+	FieldValues []string
 }
 
 func ScanXReadReply(src []interface{}, dst StreamElements) (StreamElements, error) {
@@ -55,7 +55,6 @@ func ScanXReadReply(src []interface{}, dst StreamElements) (StreamElements, erro
 	}
 
 	for i, stream := range src {
-		//		a.logger.Info("streamValues", zap.Any("streamValues", streamValues))
 		elem, err := redis.Values(stream, nil)
 		if err != nil {
 			return nil, err
@@ -64,13 +63,10 @@ func ScanXReadReply(src []interface{}, dst StreamElements) (StreamElements, erro
 			return nil, fmt.Errorf("unexpected stream element slice length (%d)", len(elem))
 		}
 
-		// a.logger.Info("streamValue", zap.Any("streamValue", streamValue))
-
 		name, err := redis.String(elem[0], nil)
 		if err != nil {
 			return nil, err
 		}
-		//a.logger.Info("stream", zap.Any("stream", stream))
 
 		dst[i].Name = name
 
@@ -99,7 +95,24 @@ func ScanXReadReply(src []interface{}, dst StreamElements) (StreamElements, erro
 				return nil, err
 			}
 			dst[i].Items[j].ID = id
-			dst[i].Items[j].FieldValues = item[1]
+
+			fvs, err := redis.Values(item[1], nil)
+			if err != nil {
+				return nil, err
+			}
+
+			if len(dst[i].Items[j].FieldValues) != len(fvs) {
+				// Reallocate
+				dst[i].Items[j].FieldValues = make([]string, len(fvs))
+			}
+
+			for k, rawfv := range fvs {
+				fv, err := redis.String(rawfv, nil)
+				if err != nil {
+					return nil, err
+				}
+				dst[i].Items[j].FieldValues[k] = fv
+			}
 		}
 	}
 	return dst, nil
