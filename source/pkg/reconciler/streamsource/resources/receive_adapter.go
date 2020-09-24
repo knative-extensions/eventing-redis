@@ -68,6 +68,9 @@ func MakeReceiveAdapter(source *sourcesv1alpha1.RedisStreamSource, image string,
 								Name:  "ADDRESS",
 								Value: source.Spec.Address,
 							}, {
+								Name:  "GROUP",
+								Value: source.Spec.Group,
+							}, {
 								Name:  "K_SINK",
 								Value: sinkURI,
 							}, {

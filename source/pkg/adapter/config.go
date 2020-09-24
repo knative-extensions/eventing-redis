@@ -22,6 +22,8 @@ import (
 type Config struct {
 	adapter.EnvConfig
 
-	Address string `envconfig:"ADDRESS" required:"true"`
-	Stream  string `envconfig:"STREAM" required:"true"`
+	Address         string `envconfig:"ADDRESS" required:"true"`
+	Stream          string `envconfig:"STREAM" required:"true"`
+	Group           string `envconfig:"GROUP" default:"mygroup" required:"false"`
+	MaxPendingCount int    `envconfig:"MAXPENDINGCOUNT" default:"10" required:"false"`
 }

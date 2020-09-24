@@ -5,6 +5,7 @@ metadata:
 spec:
   address: "redis.redis.svc.cluster.local:6379"
   stream: mystream
+  group: myredisgroup
   sink:
     ref:
       apiVersion: v1

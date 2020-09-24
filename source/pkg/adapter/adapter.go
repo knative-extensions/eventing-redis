@@ -65,8 +65,8 @@ func (a *Adapter) Start(ctx context.Context) error {
 		return err
 	}
 
-	// TODO: get it from spec
-	groupName := "group"
+	groupName := a.config.Group             //TODO: If empty, need to use a default/random group name?
+	maxPenCount := a.config.MaxPendingCount //TODO: If empty, need to use a default count?
 
 	a.logger.Info("Retrieving group info", zap.String("group", groupName))
 	groups, err := scan.ScanXInfoGroupReply(conn.Do("XINFO", "GROUPS", a.config.Stream))
@@ -74,9 +74,22 @@ func (a *Adapter) Start(ctx context.Context) error {
 		return err
 	}
 
-	if _, ok := groups[groupName]; ok {
+	if groupInfo, ok := groups[groupName]; ok {
 		a.logger.Info("Reusing consumer group", zap.String("group", groupName))
-		// TODO: process pending messages
+
+		if groupInfo.Pending > 0 {
+			// Process pending messages that may be permanently failing
+			pendingmsgs, err := scan.ScanXPendingReply(conn.Do("XPENDING", a.config.Stream, groupName, "-", "+", maxPenCount))
+			if err != nil {
+				return err
+			}
+
+			if len(pendingmsgs) > 0 {
+				// TODO: check idletime for each message and xclaim to different consumer than current owner? THINK ABOUT DESIGN
+			}
+
+		}
+
 	} else {
 		a.logger.Info("Creating consumer group", zap.String("group", groupName))
 		_, err := conn.Do("XGROUP", "CREATE", a.config.Stream, groupName, "$")
@@ -93,9 +106,10 @@ func (a *Adapter) Start(ctx context.Context) error {
 			// TODO: get it from statefulset pod name
 			consumerName := fmt.Sprintf("consumer-%d", i)
 
-			a.logger.Info("Listening for messages")
+			a.logger.Info("Listening for messages", zap.String("consumerName", consumerName))
 
 			for {
+				//following xread only reads new data (so what about when consumer fails?)
 				reply, err := conn.Do("XREADGROUP", "GROUP", groupName, consumerName, "COUNT", 1, "BLOCK", 0, "STREAMS", a.config.Stream, ">")
 
 				if err != nil {
@@ -103,6 +117,7 @@ func (a *Adapter) Start(ctx context.Context) error {
 					time.Sleep(1 * time.Second)
 					continue
 				}
+				a.logger.Info("consumer reading from stream", zap.String("consumerName", consumerName))
 
 				event, err := a.toEvent(reply)
 				if err != nil {
@@ -119,6 +134,7 @@ func (a *Adapter) Start(ctx context.Context) error {
 				if err != nil {
 					a.logger.Error("cannot ack message", zap.Error(err))
 				}
+				a.logger.Info("consumer acknowledged the message", zap.String("consumerName", consumerName))
 			}
 		}()
 	}

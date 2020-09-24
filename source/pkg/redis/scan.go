@@ -127,7 +127,7 @@ func ScanXReadReply(src []interface{}, dst StreamElements) (StreamElements, erro
 //6) (integer) 2
 //7) last-delivered-id
 //8) "1588152489012-0"
-//2) 1) name
+//1) 1) name
 //2) "some-other-group"
 //3) consumers
 //4) (integer) 1
@@ -191,6 +191,79 @@ func ScanXInfoGroupReply(reply interface{}, err error) (StreamGroups, error) {
 			Consumers:       consumers,
 			Pending:         pending,
 			LastDeliveredId: lastid,
+		}
+	}
+	return dst, nil
+}
+
+//XPENDING mystream mygroup [<start-id> <end-id> <count> [<consumer-name>]]
+//1) 1) 1526569498055-0
+//   2) "Bob"
+//   3) (integer) 74170458
+//   4) (integer) 1
+//2) 1) 1526569506935-0
+//   2) "Bob"
+//   3) (integer) 74170458
+//   4) (integer) 1
+
+type PendingMessages []PendingMessage
+
+type PendingMessage struct {
+	// MessageID is the ID of the pending message
+	MessageID string
+	// ConsumerName is the name of the consumer who was sent the pending message
+	ConsumerName string
+	// IdleTime is how much milliseconds have passed since the last time the message was delivered to the consumer
+	IdleTime int
+	// NumberOfDeliveries  is the number of times that this message was delivered to the consumer
+	DeliveryCount int
+}
+
+func ScanXPendingReply(reply interface{}, err error) (PendingMessages, error) {
+	if err != nil {
+		return nil, err
+	}
+	pendingmessages, err := redis.Values(reply, nil)
+	if err != nil {
+		return nil, errors.New("expected a reply of type array")
+	}
+	dst := make(PendingMessages, len(pendingmessages))
+
+	for i, pendingmessage := range pendingmessages {
+		elem, err := redis.Values(pendingmessage, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(elem) != 4 {
+			return nil, fmt.Errorf("unexpected pending message element slice length (%d)", len(elem))
+		}
+
+		msgid, err := redis.String(elem[0], nil)
+		if err != nil {
+			return nil, err
+		}
+
+		name, err := redis.String(elem[1], nil)
+		if err != nil {
+			return nil, err
+		}
+
+		idletime, err := redis.Int(elem[2], nil)
+		if err != nil {
+			return nil, err
+		}
+
+		delcount, err := redis.Int(elem[3], nil)
+		if err != nil {
+			return nil, err
+		}
+
+		dst[i] = PendingMessage{
+			MessageID:     msgid,
+			ConsumerName:  name,
+			IdleTime:      idletime,
+			DeliveryCount: delcount,
 		}
 	}
 	return dst, nil
