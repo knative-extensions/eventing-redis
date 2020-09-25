@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	scan "knative.dev/eventing-redis/source/pkg/redis"
@@ -65,58 +66,85 @@ func (a *Adapter) Start(ctx context.Context) error {
 		return err
 	}
 
-	groupName := a.config.Group             //TODO: If empty, need to use a default/random group name?
-	maxPenCount := a.config.MaxPendingCount //TODO: If empty, need to use a default count?
+	// Build consumer group name from stateful set pod name of adapter
+	groupName := a.config.PodName
 
 	a.logger.Info("Retrieving group info", zap.String("group", groupName))
 	groups, err := scan.ScanXInfoGroupReply(conn.Do("XINFO", "GROUPS", a.config.Stream))
+
 	if err != nil {
-		return err
-	}
 
-	if groupInfo, ok := groups[groupName]; ok {
-		a.logger.Info("Reusing consumer group", zap.String("group", groupName))
-
-		if groupInfo.Pending > 0 {
-			// Process pending messages that may be permanently failing
-			pendingmsgs, err := scan.ScanXPendingReply(conn.Do("XPENDING", a.config.Stream, groupName, "-", "+", maxPenCount))
+		if strings.Contains(err.Error(), "no such key") {
+			// stream does not exist, may have been deleted accidentally
+			a.logger.Info("Creating stream and consumer group", zap.String("group", groupName))
+			//XGROUP CREATE creates the stream automatically, if it doesn't exist, when MKSTREAM subcommand is specified as last argument
+			_, err := conn.Do("XGROUP", "CREATE", a.config.Stream, groupName, "$", "MKSTREAM")
 			if err != nil {
 				return err
 			}
-
-			if len(pendingmsgs) > 0 {
-				// TODO: check idletime for each message and xclaim to different consumer than current owner? THINK ABOUT DESIGN
-			}
-
+		} else {
+			return err
 		}
 
 	} else {
-		a.logger.Info("Creating consumer group", zap.String("group", groupName))
-		_, err := conn.Do("XGROUP", "CREATE", a.config.Stream, groupName, "$")
-		if err != nil {
-			return err
+
+		if _, ok := groups[groupName]; ok {
+			a.logger.Info("Reusing consumer group", zap.String("group", groupName))
+
+			/* 	if groupInfo.Pending > 0 {
+				// Process pending messages that may be permanently failing
+				pendingmsgs, err := scan.ScanXPendingReply(conn.Do("XPENDING", a.config.Stream, groupName, "-", "+", a.config.MaxPendingCount))
+				if err != nil {
+					return err
+				}
+
+				if len(pendingmsgs) > 0 {
+					// TODO: check idletime for each message and xclaim to different consumer than current owner? THINK ABOUT DESIGN
+				}
+
+			} */
+
+		} else {
+			a.logger.Info("Creating consumer group", zap.String("group", groupName))
+			_, err := conn.Do("XGROUP", "CREATE", a.config.Stream, groupName, "$")
+			if err != nil {
+				return err
+			}
 		}
+
 	}
 	conn.Close()
 
-	for i := 0; i < 100; i++ {
+	for i := 0; i < a.config.NumConsumers; i++ {
 		go func() {
 			conn, _ := pool.Dial()
 
-			// TODO: get it from statefulset pod name
-			consumerName := fmt.Sprintf("consumer-%d", i)
+			// Build consumer name from group name and consumer index
+			consumerName := fmt.Sprintf("%s-%d", groupName, i)
 
 			a.logger.Info("Listening for messages", zap.String("consumerName", consumerName))
 
 			for {
-				//following xread only reads new data (so what about when consumer fails?)
-				reply, err := conn.Do("XREADGROUP", "GROUP", groupName, consumerName, "COUNT", 1, "BLOCK", 0, "STREAMS", a.config.Stream, ">")
+				//XREAD below reads all the pending messages before reading new data (to cover the case of a consumer recovering after a crash)
+				reply, err := conn.Do("XREADGROUP", "GROUP", groupName, consumerName, "COUNT", 1, "BLOCK", 0, "STREAMS", a.config.Stream, "0")
 
 				if err != nil {
 					a.logger.Error("cannot read from stream", zap.Error(err))
 					time.Sleep(1 * time.Second)
 					continue
 				}
+
+				if reply == nil {
+					//XREAD below reads new data (since there are no more pending messages)
+					reply, err = conn.Do("XREADGROUP", "GROUP", groupName, consumerName, "COUNT", 1, "BLOCK", 0, "STREAMS", a.config.Stream, ">")
+
+					if err != nil {
+						a.logger.Error("cannot read from stream", zap.Error(err))
+						time.Sleep(1 * time.Second)
+						continue
+					}
+				}
+
 				a.logger.Info("consumer reading from stream", zap.String("consumerName", consumerName))
 
 				event, err := a.toEvent(reply)

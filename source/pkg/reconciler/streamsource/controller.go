@@ -58,7 +58,7 @@ func NewController(
 
 	r := &Reconciler{
 		kubeClientSet:       kubeclient.Get(ctx),
-		dr:                  &reconciler.DeploymentReconciler{KubeClientSet: kubeclient.Get(ctx)},
+		dr:                  &reconciler.StatefulSetReconciler{KubeClientSet: kubeclient.Get(ctx)},
 		rbr:                 &reconciler.RoleBindingReconciler{KubeClientSet: kubeclient.Get(ctx)},
 		sar:                 &reconciler.ServiceAccountReconciler{KubeClientSet: kubeclient.Get(ctx)},
 		configs:             reconcilersource.WatchConfigurations(ctx, component, cmw),

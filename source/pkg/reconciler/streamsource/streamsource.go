@@ -48,7 +48,7 @@ func newWarningSinkNotFound(sink *duckv1.Destination) pkgreconciler.Event {
 // Reconciler reconciles a streamsource object
 type Reconciler struct {
 	kubeClientSet       kubernetes.Interface
-	dr                  *reconciler.DeploymentReconciler
+	dr                  *reconciler.StatefulSetReconciler
 	rbr                 *reconciler.RoleBindingReconciler
 	sar                 *reconciler.ServiceAccountReconciler
 	receiveAdapterImage string
@@ -90,16 +90,16 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.
 		return event
 	}
 
-	expectedDeployment := resources.MakeReceiveAdapter(source, r.receiveAdapterImage, sinkURI.String())
-	ra, event := r.dr.ReconcileDeployment(ctx, source, expectedDeployment)
+	expectedStatefulSet := resources.MakeReceiveAdapter(source, r.receiveAdapterImage, sinkURI.String())
+	ra, event := r.dr.ReconcileStatefulSet(ctx, source, expectedStatefulSet)
 	if ra == nil {
 		if source.Status.Annotations == nil {
 			source.Status.Annotations = make(map[string]string)
 		}
-		source.Status.Annotations["Deployment"] = event.Error()
+		source.Status.Annotations["StatefulSet"] = event.Error()
 		return event
 	}
-	source.Status.PropagateDeploymentAvailability(ra)
+	source.Status.PropagateStatefulSetAvailability(ra)
 
 	return nil
 }

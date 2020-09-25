@@ -48,5 +48,7 @@ spec:
           value: config-leader-election-redis
         - name: STREAMSOURCE_RA_IMAGE
           value: ko://knative.dev/eventing-redis/source/cmd/receive_adapter
+        - name: CONFIG_REDIS_NUMCONSUMERS
+          value: config-redis-numconsumers     
       terminationGracePeriodSeconds: 10
 

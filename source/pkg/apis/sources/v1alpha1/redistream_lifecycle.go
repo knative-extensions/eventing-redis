@@ -30,7 +30,7 @@ const (
 	// RedisStreamConditionSinkProvided has status True when the RedisStreamSource has been configured with a sink target.
 	RedisStreamConditionSinkProvided apis.ConditionType = "SinkProvided"
 
-	// RedisStreamConditionDeployed has status True when the RedisStreamSource has had it's deployment created.
+	// RedisStreamConditionDeployed has status True when the RedisStreamSource has had it's statefulset created.
 	RedisStreamConditionDeployed apis.ConditionType = "Deployed"
 )
 
@@ -90,13 +90,13 @@ func (s *RedisStreamSourceStatus) MarkNoSink(reason, messageFormat string, messa
 	redisStreamCondSet.Manage(s).MarkFalse(RedisStreamConditionSinkProvided, reason, messageFormat, messageA...)
 }
 
-// PropagateDeploymentAvailability uses the availability of the provided Deployment to determine if
+// PropagateStatefulSetAvailability uses the availability of the provided StatefulSet to determine if
 // RedisStreamConditionDeployed should be marked as true or false.
-func (s *RedisStreamSourceStatus) PropagateDeploymentAvailability(d *appsv1.Deployment) {
-	deploymentAvailableFound := false
+func (s *RedisStreamSourceStatus) PropagateStatefulSetAvailability(d *appsv1.StatefulSet) {
+	statefulsetAvailableFound := false
 	for _, cond := range d.Status.Conditions {
-		if cond.Type == appsv1.DeploymentAvailable {
-			deploymentAvailableFound = true
+		if cond.Type == "Available" {
+			statefulsetAvailableFound = true
 			if cond.Status == corev1.ConditionTrue {
 				redisStreamCondSet.Manage(s).MarkTrue(RedisStreamConditionDeployed)
 			} else if cond.Status == corev1.ConditionFalse {
@@ -106,8 +106,8 @@ func (s *RedisStreamSourceStatus) PropagateDeploymentAvailability(d *appsv1.Depl
 			}
 		}
 	}
-	if !deploymentAvailableFound {
-		redisStreamCondSet.Manage(s).MarkUnknown(RedisStreamConditionDeployed, "DeploymentUnavailable", "The Deployment '%s' is unavailable.", d.Name)
+	if !statefulsetAvailableFound {
+		redisStreamCondSet.Manage(s).MarkUnknown(RedisStreamConditionDeployed, "StatefulSetUnavailable", "The StatefulSet '%s' is unavailable.", d.Name)
 	}
 }
 

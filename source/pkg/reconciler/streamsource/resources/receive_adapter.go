@@ -29,15 +29,15 @@ import (
 )
 
 func AdapterName(source *sourcesv1alpha1.RedisStreamSource) string {
-	return kmeta.ChildName(fmt.Sprintf("redistreamsource-%s-", source.Name), string(source.UID))
+	return kmeta.ChildName(fmt.Sprintf("redissource-%s-", source.Name), "1234") //TODO: must be no more than 63 characters, spec.hostname: Invalid value error
 }
 
 // MakeReceiveAdapter generates (but does not insert into K8s) the Receive Adapter Deployment for
 // RedisStream Sources.
-func MakeReceiveAdapter(source *sourcesv1alpha1.RedisStreamSource, image string, sinkURI string) *appsv1.Deployment {
+func MakeReceiveAdapter(source *sourcesv1alpha1.RedisStreamSource, image string, sinkURI string) *appsv1.StatefulSet {
 	replicas := int32(1)
 	labels := Labels(source.Name)
-	return &appsv1.Deployment{
+	return &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: source.Namespace,
 			Name:      AdapterName(source),
@@ -46,7 +46,7 @@ func MakeReceiveAdapter(source *sourcesv1alpha1.RedisStreamSource, image string,
 				*kmeta.NewControllerRef(source),
 			},
 		},
-		Spec: appsv1.DeploymentSpec{
+		Spec: appsv1.StatefulSetSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: labels,
 			},
@@ -67,9 +67,6 @@ func MakeReceiveAdapter(source *sourcesv1alpha1.RedisStreamSource, image string,
 							}, {
 								Name:  "ADDRESS",
 								Value: source.Spec.Address,
-							}, {
-								Name:  "GROUP",
-								Value: source.Spec.Group,
 							}, {
 								Name:  "K_SINK",
 								Value: sinkURI,
