@@ -73,13 +73,13 @@ func (a *Adapter) Start(ctx context.Context) error {
 	groups, err := scan.ScanXInfoGroupReply(conn.Do("XINFO", "GROUPS", a.config.Stream))
 
 	if err != nil {
-
-		if strings.Contains(err.Error(), "no such key") {
+		if strings.Contains(strings.ToLower(err.Error()), "no such key") || strings.Contains(strings.ToLower(err.Error()), "no longer exists") {
 			// stream does not exist, may have been deleted accidentally
 			a.logger.Info("Creating stream and consumer group", zap.String("group", groupName))
 			//XGROUP CREATE creates the stream automatically, if it doesn't exist, when MKSTREAM subcommand is specified as last argument
 			_, err := conn.Do("XGROUP", "CREATE", a.config.Stream, groupName, "$", "MKSTREAM")
 			if err != nil {
+				a.logger.Error("Cannot create stream and consumer group", zap.Error(err))
 				return err
 			}
 		} else {
@@ -90,24 +90,11 @@ func (a *Adapter) Start(ctx context.Context) error {
 
 		if _, ok := groups[groupName]; ok {
 			a.logger.Info("Reusing consumer group", zap.String("group", groupName))
-
-			/* 	if groupInfo.Pending > 0 {
-				// Process pending messages that may be permanently failing
-				pendingmsgs, err := scan.ScanXPendingReply(conn.Do("XPENDING", a.config.Stream, groupName, "-", "+", a.config.MaxPendingCount))
-				if err != nil {
-					return err
-				}
-
-				if len(pendingmsgs) > 0 {
-					// TODO: check idletime for each message and xclaim to different consumer than current owner? THINK ABOUT DESIGN
-				}
-
-			} */
-
 		} else {
 			a.logger.Info("Creating consumer group", zap.String("group", groupName))
 			_, err := conn.Do("XGROUP", "CREATE", a.config.Stream, groupName, "$")
 			if err != nil {
+				a.logger.Error("Cannot create consumer group", zap.Error(err))
 				return err
 			}
 		}
@@ -115,56 +102,83 @@ func (a *Adapter) Start(ctx context.Context) error {
 	}
 	conn.Close()
 
+	a.logger.Info("Number of consumers from config:", zap.Int("NumConsumers", a.config.NumConsumers))
+
 	for i := 0; i < a.config.NumConsumers; i++ {
-		go func() {
+		go func(j int) {
 			conn, _ := pool.Dial()
 
-			// Build consumer name from group name and consumer index
-			consumerName := fmt.Sprintf("%s-%d", groupName, i)
+			consumerName := fmt.Sprintf("%s-%d", groupName, j)
 
 			a.logger.Info("Listening for messages", zap.String("consumerName", consumerName))
 
 			for {
-				//XREAD below reads all the pending messages before reading new data (to cover the case of a consumer recovering after a crash)
+				//XREAD below reads all the pending messages before reading new data (in the case of a consumer recovering after a crash)
 				reply, err := conn.Do("XREADGROUP", "GROUP", groupName, consumerName, "COUNT", 1, "BLOCK", 0, "STREAMS", a.config.Stream, "0")
+				//a.logger.Info("Consumer read a pending message", zap.String("consumerName", consumerName))
 
 				if err != nil {
-					a.logger.Error("cannot read from stream", zap.Error(err))
-					time.Sleep(1 * time.Second)
-					continue
-				}
-
-				if reply == nil {
-					//XREAD below reads new data (since there are no more pending messages)
-					reply, err = conn.Do("XREADGROUP", "GROUP", groupName, consumerName, "COUNT", 1, "BLOCK", 0, "STREAMS", a.config.Stream, ">")
-
-					if err != nil {
-						a.logger.Error("cannot read from stream", zap.Error(err))
+					if strings.Contains(strings.ToLower(err.Error()), "no such key") || strings.Contains(strings.ToLower(err.Error()), "no longer exists") {
+						a.logger.Info("Re-creating stream and consumer group", zap.String("group", groupName))
+						_, err := conn.Do("XGROUP", "CREATE", a.config.Stream, groupName, "$", "MKSTREAM")
+						if err != nil {
+							a.logger.Error("Cannot re-create stream and group", zap.Error(err))
+							time.Sleep(1 * time.Second)
+							continue
+						}
+					} else {
+						a.logger.Error("Cannot read from stream", zap.Error(err))
 						time.Sleep(1 * time.Second)
 						continue
 					}
 				}
 
-				a.logger.Info("consumer reading from stream", zap.String("consumerName", consumerName))
-
 				event, err := a.toEvent(reply)
 				if err != nil {
-					a.logger.Error("cannot convert reply", zap.Error(err))
-					continue
+					if strings.Contains(strings.ToLower(err.Error()), "number of items not equal to one (got 0)") { // no more pending messages!
+						reply, err = conn.Do("XREADGROUP", "GROUP", groupName, consumerName, "COUNT", 1, "BLOCK", 0, "STREAMS", a.config.Stream, ">")
+						//a.logger.Info("Consumer read a new message", zap.String("consumerName", consumerName))
+
+						if err != nil {
+							if strings.Contains(strings.ToLower(err.Error()), "no such key") || strings.Contains(strings.ToLower(err.Error()), "no longer exists") {
+								a.logger.Info("Re-creating stream and consumer group", zap.String("group", groupName))
+								_, err := conn.Do("XGROUP", "CREATE", a.config.Stream, groupName, "$", "MKSTREAM")
+								if err != nil {
+									a.logger.Error("Cannot re-create stream and group", zap.Error(err))
+									time.Sleep(1 * time.Second)
+									continue
+								}
+
+							} else {
+								a.logger.Error("Cannot read from stream", zap.Error(err))
+								time.Sleep(1 * time.Second)
+								continue
+							}
+						}
+						event, err = a.toEvent(reply)
+						if err != nil {
+							a.logger.Error("Cannot convert reply", zap.Error(err))
+							continue
+						}
+					} else {
+						a.logger.Error("Cannot convert reply", zap.Error(err))
+						continue
+					}
 				}
 
 				if result := a.client.Send(ctx, *event); !cloudevents.IsACK(result) {
 					//  Event is lost.
-					a.logger.Error("failed to send cloudevent", zap.Any("result", result))
+					a.logger.Error("Failed to send cloudevent", zap.Any("result", result))
 				}
+				//a.logger.Info("Consumer sent message as cloudevent", zap.String("consumerName", consumerName))
 
 				_, err = conn.Do("XACK", a.config.Stream, groupName, event.ID())
 				if err != nil {
-					a.logger.Error("cannot ack message", zap.Error(err))
+					a.logger.Error("Cannot ack message", zap.Error(err))
 				}
-				a.logger.Info("consumer acknowledged the message", zap.String("consumerName", consumerName))
+				a.logger.Info("Consumer acknowledged the message", zap.String("consumerName", consumerName))
 			}
-		}()
+		}(i)
 	}
 
 	<-ctx.Done()

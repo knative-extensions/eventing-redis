@@ -19,4 +19,4 @@ metadata:
   namespace: knative-sources
 data:
   # Configure the receive adapter with the number of consumers in a group
-  numConsumers: "100"
+  numConsumers: "5"
