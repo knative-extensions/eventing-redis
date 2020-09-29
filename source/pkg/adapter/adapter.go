@@ -109,13 +109,12 @@ func (a *Adapter) Start(ctx context.Context) error {
 			conn, _ := pool.Dial()
 
 			consumerName := fmt.Sprintf("%s-%d", groupName, j)
-
+			xreadID := "0" //Initial ID to read pending messages
 			a.logger.Info("Listening for messages", zap.String("consumerName", consumerName))
 
 			for {
-				//XREAD below reads all the pending messages before reading new data (in the case of a consumer recovering after a crash)
-				reply, err := conn.Do("XREADGROUP", "GROUP", groupName, consumerName, "COUNT", 1, "BLOCK", 0, "STREAMS", a.config.Stream, "0")
-				//a.logger.Info("Consumer read a pending message", zap.String("consumerName", consumerName))
+				//XREAD below reads all the pending messages when xreadID=="0" and new messages when xreadID==">"
+				reply, err := conn.Do("XREADGROUP", "GROUP", groupName, consumerName, "COUNT", 1, "BLOCK", 0, "STREAMS", a.config.Stream, xreadID)
 
 				if err != nil {
 					if strings.Contains(strings.ToLower(err.Error()), "no such key") || strings.Contains(strings.ToLower(err.Error()), "no longer exists") {
@@ -136,35 +135,14 @@ func (a *Adapter) Start(ctx context.Context) error {
 				event, err := a.toEvent(reply)
 				if err != nil {
 					if strings.Contains(strings.ToLower(err.Error()), "number of items not equal to one (got 0)") { // no more pending messages!
-						reply, err = conn.Do("XREADGROUP", "GROUP", groupName, consumerName, "COUNT", 1, "BLOCK", 0, "STREAMS", a.config.Stream, ">")
-						//a.logger.Info("Consumer read a new message", zap.String("consumerName", consumerName))
-
-						if err != nil {
-							if strings.Contains(strings.ToLower(err.Error()), "no such key") || strings.Contains(strings.ToLower(err.Error()), "no longer exists") {
-								a.logger.Info("Re-creating stream and consumer group", zap.String("group", groupName))
-								_, err := conn.Do("XGROUP", "CREATE", a.config.Stream, groupName, "$", "MKSTREAM")
-								if err != nil {
-									a.logger.Error("Cannot re-create stream and group", zap.Error(err))
-									time.Sleep(1 * time.Second)
-									continue
-								}
-
-							} else {
-								a.logger.Error("Cannot read from stream", zap.Error(err))
-								time.Sleep(1 * time.Second)
-								continue
-							}
-						}
-						event, err = a.toEvent(reply)
-						if err != nil {
-							a.logger.Error("Cannot convert reply", zap.Error(err))
-							continue
-						}
+						xreadID = ">" //ID to read new messages in next iteration
+						continue
 					} else {
 						a.logger.Error("Cannot convert reply", zap.Error(err))
 						continue
 					}
 				}
+				xreadID = "0" //ID to read pending messages in next iteration
 
 				if result := a.client.Send(ctx, *event); !cloudevents.IsACK(result) {
 					//  Event is lost.
