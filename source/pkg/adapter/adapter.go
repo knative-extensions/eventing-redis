@@ -139,10 +139,10 @@ func (a *Adapter) Start(ctx context.Context) error {
 						continue
 					} else {
 						a.logger.Error("Cannot convert reply", zap.Error(err))
+						time.Sleep(1 * time.Second)
 						continue
 					}
 				}
-				xreadID = "0" //ID to read pending messages in next iteration
 
 				if result := a.client.Send(ctx, *event); !cloudevents.IsACK(result) {
 					//  Event is lost.
@@ -153,6 +153,9 @@ func (a *Adapter) Start(ctx context.Context) error {
 				_, err = conn.Do("XACK", a.config.Stream, groupName, event.ID())
 				if err != nil {
 					a.logger.Error("Cannot ack message", zap.Error(err))
+					xreadID = "0" //ID to read pending message in next iteration
+					time.Sleep(1 * time.Second)
+					continue
 				}
 				a.logger.Info("Consumer acknowledged the message", zap.String("consumerName", consumerName))
 			}
