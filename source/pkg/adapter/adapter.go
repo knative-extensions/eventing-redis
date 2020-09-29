@@ -117,19 +117,9 @@ func (a *Adapter) Start(ctx context.Context) error {
 				reply, err := conn.Do("XREADGROUP", "GROUP", groupName, consumerName, "COUNT", 1, "BLOCK", 0, "STREAMS", a.config.Stream, xreadID)
 
 				if err != nil {
-					if strings.Contains(strings.ToLower(err.Error()), "no such key") || strings.Contains(strings.ToLower(err.Error()), "no longer exists") {
-						a.logger.Info("Re-creating stream and consumer group", zap.String("group", groupName))
-						_, err := conn.Do("XGROUP", "CREATE", a.config.Stream, groupName, "$", "MKSTREAM")
-						if err != nil {
-							a.logger.Error("Cannot re-create stream and group", zap.Error(err))
-							time.Sleep(1 * time.Second)
-							continue
-						}
-					} else {
-						a.logger.Error("Cannot read from stream", zap.Error(err))
-						time.Sleep(1 * time.Second)
-						continue
-					}
+					a.logger.Error("Cannot read from stream", zap.Error(err))
+					time.Sleep(1 * time.Second)
+					continue
 				}
 
 				event, err := a.toEvent(reply)
