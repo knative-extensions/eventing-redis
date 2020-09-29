@@ -18,7 +18,6 @@ package v1alpha1
 
 import (
 	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"knative.dev/pkg/apis"
 )
@@ -93,20 +92,9 @@ func (s *RedisStreamSourceStatus) MarkNoSink(reason, messageFormat string, messa
 // PropagateStatefulSetAvailability uses the availability of the provided StatefulSet to determine if
 // RedisStreamConditionDeployed should be marked as true or false.
 func (s *RedisStreamSourceStatus) PropagateStatefulSetAvailability(d *appsv1.StatefulSet) {
-	statefulsetAvailableFound := false
-	for _, cond := range d.Status.Conditions {
-		if cond.Type == "Available" {
-			statefulsetAvailableFound = true
-			if cond.Status == corev1.ConditionTrue {
-				redisStreamCondSet.Manage(s).MarkTrue(RedisStreamConditionDeployed)
-			} else if cond.Status == corev1.ConditionFalse {
-				redisStreamCondSet.Manage(s).MarkFalse(RedisStreamConditionDeployed, cond.Reason, cond.Message)
-			} else if cond.Status == corev1.ConditionUnknown {
-				redisStreamCondSet.Manage(s).MarkUnknown(RedisStreamConditionDeployed, cond.Reason, cond.Message)
-			}
-		}
-	}
-	if !statefulsetAvailableFound {
+	if d.Status.ReadyReplicas == *d.Spec.Replicas {
+		redisStreamCondSet.Manage(s).MarkTrue(RedisStreamConditionDeployed)
+	} else {
 		redisStreamCondSet.Manage(s).MarkUnknown(RedisStreamConditionDeployed, "StatefulSetUnavailable", "The StatefulSet '%s' is unavailable.", d.Name)
 	}
 }
