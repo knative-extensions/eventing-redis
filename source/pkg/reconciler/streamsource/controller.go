@@ -23,7 +23,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	reconcilersource "knative.dev/eventing/pkg/reconciler/source"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
-	deploymentinformer "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment"
+	statefulsetinformer "knative.dev/pkg/client/injection/kube/informers/apps/v1/statefulset"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
@@ -53,7 +53,7 @@ func NewController(
 		logging.FromContext(ctx).Panicf("unable to processRedisStreamSource's required environment variables: %v", err)
 	}
 
-	deploymentInformer := deploymentinformer.Get(ctx)
+	statefulsetInformer := statefulsetinformer.Get(ctx)
 	redisstreamSourceInformer := redisstreamsourceinformer.Get(ctx)
 
 	r := &Reconciler{
@@ -73,7 +73,7 @@ func NewController(
 
 	redisstreamSourceInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
-	deploymentInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+	statefulsetInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: controller.FilterControllerGK(v1alpha1.Kind("RedisStreamSource")),
 		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
 	})
