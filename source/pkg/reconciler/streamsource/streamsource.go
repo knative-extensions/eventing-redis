@@ -40,6 +40,10 @@ const (
 	adapterClusterRoleName = "knative-sources-redisstream-adapter"
 )
 
+func newFinalizedNormal(namespace, name string) pkgreconciler.Event {
+	return pkgreconciler.NewEvent(corev1.EventTypeNormal, "RedisStreamSourceFinalized", "RedisStreamSource finalized: \"%s/%s\"", namespace, name)
+}
+
 func newWarningSinkNotFound(sink *duckv1.Destination) pkgreconciler.Event {
 	b, _ := json.Marshal(sink)
 	return pkgreconciler.NewEvent(corev1.EventTypeWarning, "SinkNotFound", "Sink not found: %s", string(b))
@@ -48,7 +52,7 @@ func newWarningSinkNotFound(sink *duckv1.Destination) pkgreconciler.Event {
 // Reconciler reconciles a streamsource object
 type Reconciler struct {
 	kubeClientSet       kubernetes.Interface
-	dr                  *reconciler.StatefulSetReconciler
+	ssr                 *reconciler.StatefulSetReconciler
 	rbr                 *reconciler.RoleBindingReconciler
 	sar                 *reconciler.ServiceAccountReconciler
 	receiveAdapterImage string
@@ -58,6 +62,7 @@ type Reconciler struct {
 }
 
 var _ streamsourcereconciler.Interface = (*Reconciler)(nil)
+var _ streamsourcereconciler.Finalizer = (*Reconciler)(nil)
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.RedisStreamSource) pkgreconciler.Event {
 	source.Annotations = nil
@@ -91,7 +96,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.
 	}
 
 	expectedStatefulSet := resources.MakeReceiveAdapter(source, r.receiveAdapterImage, sinkURI.String())
-	ra, event := r.dr.ReconcileStatefulSet(ctx, source, expectedStatefulSet)
+	ra, event := r.ssr.ReconcileStatefulSet(ctx, source, expectedStatefulSet)
 	if ra == nil {
 		if source.Status.Annotations == nil {
 			source.Status.Annotations = make(map[string]string)
@@ -102,4 +107,16 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.
 	source.Status.PropagateStatefulSetAvailability(ra)
 
 	return nil
+}
+
+func (r *Reconciler) FinalizeKind(ctx context.Context, source *sourcesv1alpha1.RedisStreamSource) pkgreconciler.Event {
+
+	//TODO: remove resources in Redis and cleanup
+	if !source.DeletionTimestamp.IsZero() { //stream source being deleted
+		//Remove finalizer from stream source??
+		//Delete stream?
+		//Delete consumer group?
+
+	}
+	return newFinalizedNormal(source.Namespace, source.Name) //ok to remove finalizer
 }

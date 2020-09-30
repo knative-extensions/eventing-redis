@@ -113,6 +113,8 @@ func (a *Adapter) Start(ctx context.Context) error {
 			a.logger.Info("Listening for messages", zap.String("consumerName", consumerName))
 
 			for {
+				//TODO: Check if statefulset's adapter pod is killed, and do not read more messages )to finish up work)
+
 				//XREAD below reads all the pending messages when xreadID=="0" and new messages when xreadID==">"
 				reply, err := conn.Do("XREADGROUP", "GROUP", groupName, consumerName, "COUNT", 1, "BLOCK", 0, "STREAMS", a.config.Stream, xreadID)
 
