@@ -61,7 +61,10 @@ type Reconciler struct {
 	configs             reconcilersource.ConfigAccessor
 }
 
+// Check that our Reconciler implements ReconcileKind.
 var _ streamsourcereconciler.Interface = (*Reconciler)(nil)
+
+// Check that our Reconciler implements FinalizeKind.
 var _ streamsourcereconciler.Finalizer = (*Reconciler)(nil)
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.RedisStreamSource) pkgreconciler.Event {
@@ -111,12 +114,9 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.
 
 func (r *Reconciler) FinalizeKind(ctx context.Context, source *sourcesv1alpha1.RedisStreamSource) pkgreconciler.Event {
 
-	//TODO: remove resources in Redis and cleanup
 	if !source.DeletionTimestamp.IsZero() { //stream source being deleted
 		//Remove finalizer from stream source??
-		//Delete stream?
-		//Delete consumer group?
-
+		//Does the stateful set receive adapter get a shutdown signal?
 	}
 	return newFinalizedNormal(source.Namespace, source.Name) //ok to remove finalizer
 }
