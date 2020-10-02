@@ -38,6 +38,7 @@ import (
 const (
 	component              = "redisstreamsource"
 	adapterClusterRoleName = "knative-sources-redisstream-adapter"
+	defaultFinalizerName   = "redisstreamsources.sources.knative.dev"
 )
 
 func newFinalizedNormal(namespace, name string) pkgreconciler.Event {
@@ -116,7 +117,20 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, source *sourcesv1alpha1.R
 
 	if !source.DeletionTimestamp.IsZero() { //stream source being deleted
 		//Remove finalizer from stream source??
+		source.ObjectMeta.Finalizers = DeleteFinalizer(source)
 		//Does the stateful set receive adapter get a shutdown signal?
 	}
 	return newFinalizedNormal(source.Namespace, source.Name) //ok to remove finalizer
+}
+
+// DeleteFinalizer delete redisstreamsource finalizer
+func DeleteFinalizer(source *sourcesv1alpha1.RedisStreamSource) []string {
+	var result []string
+	for _, finalizer := range source.ObjectMeta.Finalizers {
+		if finalizer == defaultFinalizerName {
+			continue
+		}
+		result = append(result, finalizer)
+	}
+	return result
 }

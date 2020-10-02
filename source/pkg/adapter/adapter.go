@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"strings"
@@ -63,8 +64,10 @@ func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClie
 }
 
 func (a *Adapter) Start(ctx context.Context) error {
-	quitChannel := make(chan os.Signal)
+	quitChannel := make(chan os.Signal, 1)
 	signal.Notify(quitChannel, syscall.SIGINT, syscall.SIGTERM)
+
+	shutdownChannel := make(chan struct{}, a.config.NumConsumers)
 
 	waitGroup := &sync.WaitGroup{}
 
@@ -115,7 +118,8 @@ func (a *Adapter) Start(ctx context.Context) error {
 
 	for i := 0; i < a.config.NumConsumers; i++ {
 		waitGroup.Add(1)
-		go func(wg *sync.WaitGroup, j int) {
+
+		go func(shutdownChannel chan struct{}, wg *sync.WaitGroup, j int) {
 			defer wg.Done()
 
 			conn, _ := pool.Dial()
@@ -127,62 +131,63 @@ func (a *Adapter) Start(ctx context.Context) error {
 			for {
 				//TODO: Check if statefulset's adapter pod is killed, and do not read more messages (to finish up work)
 				select {
-				case <-ctx.Done():
+				case <-shutdownChannel:
 					a.logger.Info("Shutdown consumer", zap.String("consumerName", consumerName))
 
 					_, err := conn.Do("XGROUP", "DELCONSUMER", streamName, groupName, consumerName)
 					if err != nil {
 						a.logger.Error("Cannot delete consumer", zap.Error(err))
-						time.Sleep(1 * time.Second)
-						continue
 					}
 
 					conn.Close()
 					return
 				default:
-					//XREAD below reads all the pending messages when xreadID=="0" and new messages when xreadID==">"
-					reply, err := conn.Do("XREADGROUP", "GROUP", groupName, consumerName, "COUNT", 1, "BLOCK", 0, "STREAMS", streamName, xreadID)
-					if err != nil {
-						a.logger.Error("Cannot read from stream", zap.Error(err))
-						time.Sleep(1 * time.Second)
-						continue
-					}
-
-					event, err := a.toEvent(reply)
-					if err != nil {
-						if strings.Contains(strings.ToLower(err.Error()), "number of items not equal to one (got 0)") { // no more pending messages!
-							xreadID = ">" //ID to read new messages in next iteration
-							continue
-						} else {
-							a.logger.Error("Cannot convert reply", zap.Error(err))
-							time.Sleep(1 * time.Second)
-							continue
-						}
-					}
-
-					if result := a.client.Send(ctx, *event); !cloudevents.IsACK(result) {
-						//  Event is lost.
-						a.logger.Error("Failed to send cloudevent", zap.Any("result", result))
-					}
-					//a.logger.Info("Consumer sent message as cloudevent", zap.String("consumerName", consumerName))
-
-					_, err = conn.Do("XACK", streamName, groupName, event.ID())
-					if err != nil {
-						a.logger.Error("Cannot ack message", zap.Error(err))
-						xreadID = "0" //ID to read pending message in next iteration
-						time.Sleep(1 * time.Second)
-						continue
-					}
-					a.logger.Info("Consumer acknowledged the message", zap.String("consumerName", consumerName))
 				}
+				//XREAD below reads all the pending messages when xreadID=="0" and new messages when xreadID==">"
+				reply, err := conn.Do("XREADGROUP", "GROUP", groupName, consumerName, "COUNT", 1, "BLOCK", 0, "STREAMS", streamName, xreadID)
+				if err != nil {
+					a.logger.Error("Cannot read from stream", zap.Error(err))
+					time.Sleep(1 * time.Second)
+					continue
+				}
+
+				event, err := a.toEvent(reply)
+				if err != nil {
+					if strings.Contains(strings.ToLower(err.Error()), "number of items not equal to one (got 0)") { // no more pending messages!
+						xreadID = ">" //ID to read new messages in next iteration
+						continue
+					} else {
+						a.logger.Error("Cannot convert reply", zap.Error(err))
+						time.Sleep(1 * time.Second)
+						continue
+					}
+				}
+
+				if result := a.client.Send(ctx, *event); !cloudevents.IsACK(result) {
+					//  Event is lost.
+					a.logger.Error("Failed to send cloudevent", zap.Any("result", result))
+				}
+				//a.logger.Info("Consumer sent message as cloudevent", zap.String("consumerName", consumerName))
+
+				_, err = conn.Do("XACK", streamName, groupName, event.ID())
+				if err != nil {
+					a.logger.Error("Cannot ack message", zap.Error(err))
+					xreadID = "0" //ID to read pending message in next iteration
+					time.Sleep(1 * time.Second)
+					continue
+				}
+				a.logger.Info("Consumer acknowledged the message", zap.String("consumerName", consumerName))
 			}
-		}(waitGroup, i)
+		}(shutdownChannel, waitGroup, i)
 	}
 
-	<-quitChannel // received SIGINT or SIGTERM
+	quitby := <-quitChannel // received SIGINT or SIGTERM
 
-	<-ctx.Done()
-	a.logger.Info("Quit signal received, gracefully shutdown all consumers")
+	close(shutdownChannel)
+
+	a.logger.Info("Quit signal received, gracefully shutdown all consumers.")
+	log.Println("Quit signal from: ", quitby)
+
 	waitGroup.Wait() // wait for all consumers
 
 	_, err = conn.Do("XGROUP", "DESTROY", streamName, groupName)
@@ -191,6 +196,8 @@ func (a *Adapter) Start(ctx context.Context) error {
 		return err
 	}
 	conn.Close()
+
+	a.logger.Info("Done. All consumers are stopped now.")
 
 	return nil
 }
