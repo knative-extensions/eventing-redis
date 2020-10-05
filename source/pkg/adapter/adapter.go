@@ -20,12 +20,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
-	"os"
-	"os/signal"
 	"strings"
 	"sync"
-	"syscall"
 	"time"
 
 	scan "knative.dev/eventing-redis/source/pkg/redis"
@@ -40,6 +36,8 @@ import (
 const (
 	// RedisStreamSourceEventType is the default RedisStreamSource CloudEvent type.
 	RedisStreamSourceEventType = "dev.knative.sources.redisstream"
+	blockms                    = 5000 // block for 5seconds before timing out
+	count                      = 1    //read one redis entry at a time
 )
 
 func NewEnvConfig() adapter.EnvConfigAccessor {
@@ -64,13 +62,8 @@ func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClie
 }
 
 func (a *Adapter) Start(ctx context.Context) error {
-	quitChannel := make(chan os.Signal, 1)
-	signal.Notify(quitChannel, syscall.SIGINT, syscall.SIGTERM)
-
-	shutdownChannel := make(chan struct{}, a.config.NumConsumers)
 
 	waitGroup := &sync.WaitGroup{}
-
 	pool := newPool(a.config.Address)
 
 	conn, err := pool.Dial()
@@ -79,8 +72,7 @@ func (a *Adapter) Start(ctx context.Context) error {
 	}
 
 	streamName := a.config.Stream
-	// Build consumer group name from stateful set pod name of adapter
-	groupName := a.config.PodName
+	groupName := a.config.PodName // Build consumer group name from stateful set pod name of adapter
 
 	a.logger.Info("Retrieving group info", zap.String("group", groupName))
 	groups, err := scan.ScanXInfoGroupReply(conn.Do("XINFO", "GROUPS", streamName))
@@ -119,7 +111,7 @@ func (a *Adapter) Start(ctx context.Context) error {
 	for i := 0; i < a.config.NumConsumers; i++ {
 		waitGroup.Add(1)
 
-		go func(shutdownChannel chan struct{}, wg *sync.WaitGroup, j int) {
+		go func(wg *sync.WaitGroup, j int) {
 			defer wg.Done()
 
 			conn, _ := pool.Dial()
@@ -129,66 +121,93 @@ func (a *Adapter) Start(ctx context.Context) error {
 			a.logger.Info("Listening for messages", zap.String("consumerName", consumerName))
 
 			for {
-				//TODO: Check if statefulset's adapter pod is killed, and do not read more messages (to finish up work)
 				select {
-				case <-shutdownChannel:
-					a.logger.Info("Shutdown consumer", zap.String("consumerName", consumerName))
+				case <-ctx.Done(): //received a SIGINT or SIGTERM signal. Need to process pending messages and shut down consumer group
+
+					morePendingMsgs := true
+					for morePendingMsgs {
+						reply, err := conn.Do("XREADGROUP", "GROUP", groupName, consumerName, "COUNT", count, "BLOCK", blockms, "STREAMS", streamName, xreadID)
+						if err != nil {
+							a.logger.Error("Cannot read from stream", zap.Error(err))
+							continue
+						}
+
+						event, err := a.toEvent(reply)
+						if err != nil {
+							if strings.Contains(strings.ToLower(err.Error()), "number of items not equal to one (got 0)") || // no more pending messages!
+								strings.Contains(strings.ToLower(err.Error()), "expected a reply of type array") { // Xreadgroup timed out blocking after 5 seconds
+								morePendingMsgs = false
+							} else {
+								a.logger.Error("Cannot convert reply", zap.Error(err))
+							}
+							continue
+						}
+
+						if result := a.client.Send(ctx, *event); !cloudevents.IsACK(result) { //  Event is lost
+							a.logger.Error("Failed to send cloudevent", zap.Any("result", result))
+						}
+
+						_, err = conn.Do("XACK", streamName, groupName, event.ID())
+						if err != nil {
+							a.logger.Error("Cannot ack message", zap.Error(err))
+							morePendingMsgs = true
+							continue
+						}
+						a.logger.Info("Consumer acknowledged the message", zap.String("consumerName", consumerName))
+					}
 
 					_, err := conn.Do("XGROUP", "DELCONSUMER", streamName, groupName, consumerName)
 					if err != nil {
 						a.logger.Error("Cannot delete consumer", zap.Error(err))
 					}
 
+					a.logger.Info("Consumer shut down", zap.String("consumerName", consumerName))
+
 					conn.Close()
 					return
 				default:
-				}
-				//XREAD below reads all the pending messages when xreadID=="0" and new messages when xreadID==">"
-				reply, err := conn.Do("XREADGROUP", "GROUP", groupName, consumerName, "COUNT", 1, "BLOCK", 0, "STREAMS", streamName, xreadID)
-				if err != nil {
-					a.logger.Error("Cannot read from stream", zap.Error(err))
-					time.Sleep(1 * time.Second)
-					continue
-				}
-
-				event, err := a.toEvent(reply)
-				if err != nil {
-					if strings.Contains(strings.ToLower(err.Error()), "number of items not equal to one (got 0)") { // no more pending messages!
-						xreadID = ">" //ID to read new messages in next iteration
-						continue
-					} else {
-						a.logger.Error("Cannot convert reply", zap.Error(err))
+					//XREAD below reads all the pending messages when xreadID=="0" and new messages when xreadID==">"
+					reply, err := conn.Do("XREADGROUP", "GROUP", groupName, consumerName, "COUNT", count, "BLOCK", blockms, "STREAMS", streamName, xreadID)
+					if err != nil {
+						a.logger.Error("Cannot read from stream", zap.Error(err))
 						time.Sleep(1 * time.Second)
 						continue
 					}
-				}
 
-				if result := a.client.Send(ctx, *event); !cloudevents.IsACK(result) {
-					//  Event is lost.
-					a.logger.Error("Failed to send cloudevent", zap.Any("result", result))
-				}
-				//a.logger.Info("Consumer sent message as cloudevent", zap.String("consumerName", consumerName))
+					event, err := a.toEvent(reply)
+					if err != nil {
+						if strings.Contains(strings.ToLower(err.Error()), "number of items not equal to one (got 0)") || // no more pending messages!
+							strings.Contains(strings.ToLower(err.Error()), "expected a reply of type array") { // Xreadgroup timed out blocking after 5 seconds
+							xreadID = ">" //ID to read new messages in next iteration
+						} else {
+							a.logger.Error("Cannot convert reply", zap.Error(err))
+							time.Sleep(1 * time.Second)
+						}
+						continue
+					}
 
-				_, err = conn.Do("XACK", streamName, groupName, event.ID())
-				if err != nil {
-					a.logger.Error("Cannot ack message", zap.Error(err))
-					xreadID = "0" //ID to read pending message in next iteration
-					time.Sleep(1 * time.Second)
-					continue
+					a.logger.Info("Consumer read a message", zap.String("consumerName", consumerName))
+
+					if result := a.client.Send(ctx, *event); !cloudevents.IsACK(result) { //  Event is lost
+						a.logger.Error("Failed to send cloudevent", zap.Any("result", result))
+					}
+
+					_, err = conn.Do("XACK", streamName, groupName, event.ID())
+					if err != nil {
+						a.logger.Error("Cannot ack message", zap.Error(err))
+						xreadID = "0" //ID to read pending message in next iteration
+						time.Sleep(1 * time.Second)
+						continue
+					}
+					a.logger.Info("Consumer acknowledged the message", zap.String("consumerName", consumerName))
 				}
-				a.logger.Info("Consumer acknowledged the message", zap.String("consumerName", consumerName))
 			}
-		}(shutdownChannel, waitGroup, i)
+		}(waitGroup, i)
 	}
 
-	quitby := <-quitChannel // received SIGINT or SIGTERM
-
-	close(shutdownChannel)
+	waitGroup.Wait() // wait for all consumers
 
 	a.logger.Info("Quit signal received, gracefully shutdown all consumers.")
-	log.Println("Quit signal from: ", quitby)
-
-	waitGroup.Wait() // wait for all consumers
 
 	_, err = conn.Do("XGROUP", "DESTROY", streamName, groupName)
 	if err != nil {
