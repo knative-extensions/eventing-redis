@@ -21,7 +21,7 @@ jobs:
           go-version: 1.15.x
       - name: Install ko
         run: |
-          GO111MODULE=on go get github.com/google/ko/cmd/ko@master
+          GO111MODULE=on go get github.com/google/ko/cmd/ko
       - name: Install kubectl
         uses: azure/setup-kubectl@v1
         with:
