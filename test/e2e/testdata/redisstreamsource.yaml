@@ -1,10 +1,10 @@
 apiVersion: sources.knative.dev/v1alpha1
 kind: RedisStreamSource
 metadata:
-  name: myteststream
+  name: mynewteststream
 spec:
   address: "redis.redis.svc.cluster.local:6379"
-  stream: myteststream
+  stream: mynewteststream
   sink:
     ref:
       apiVersion: v1
