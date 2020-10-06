@@ -125,7 +125,7 @@ func (a *Adapter) Start(ctx context.Context) error {
 				case <-ctx.Done(): //received a SIGINT or SIGTERM signal. Need to process pending messages and shut down consumer group
 
 					for xreadID == "0" {
-						xreadID = a.processEntry(ctx, conn, streamName, groupName, consumerName, xreadID)
+						xreadID = a.processEntry(ctx, conn, streamName, groupName, consumerName, xreadID, true)
 					}
 
 					_, err := conn.Do("XGROUP", "DELCONSUMER", streamName, groupName, consumerName)
@@ -138,7 +138,7 @@ func (a *Adapter) Start(ctx context.Context) error {
 					conn.Close()
 					return
 				default:
-					xreadID = a.processEntry(ctx, conn, streamName, groupName, consumerName, xreadID)
+					xreadID = a.processEntry(ctx, conn, streamName, groupName, consumerName, xreadID, false)
 				}
 			}
 		}(waitGroup, i)
@@ -160,7 +160,7 @@ func (a *Adapter) Start(ctx context.Context) error {
 	return nil
 }
 
-func (a *Adapter) processEntry(ctx context.Context, conn redis.Conn, streamName string, groupName string, consumerName string, xreadID int, isShuttingDown bool) (xreadID int) {
+func (a *Adapter) processEntry(ctx context.Context, conn redis.Conn, streamName string, groupName string, consumerName string, xreadID string, isShuttingDown bool) string {
 	//XREAD reads all the pending messages when xreadID=="0" and new messages when xreadID==">"
 	reply, err := conn.Do("XREADGROUP", "GROUP", groupName, consumerName, "COUNT", count, "BLOCK", blockms, "STREAMS", streamName, xreadID)
 	if err != nil {
@@ -201,6 +201,7 @@ func (a *Adapter) processEntry(ctx context.Context, conn redis.Conn, streamName 
 		return xreadID
 	}
 	a.logger.Info("Consumer acknowledged the message", zap.String("consumerName", consumerName))
+	return xreadID
 }
 
 func newPool(address string) *redis.Pool {
