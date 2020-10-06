@@ -114,5 +114,6 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.
 }
 
 func (r *Reconciler) FinalizeKind(ctx context.Context, source *sourcesv1alpha1.RedisStreamSource) pkgreconciler.Event {
+	//Nothing to do since adapter will gracefully shutdown the consumers
 	return nil //ok to remove finalizer
 }
