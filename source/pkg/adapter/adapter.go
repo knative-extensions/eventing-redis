@@ -166,7 +166,7 @@ func (a *Adapter) Start(ctx context.Context) error {
 					conn.Close()
 					return
 				default:
-					//XREAD below reads all the pending messages when xreadID=="0" and new messages when xreadID==">"
+					//XREAD reads all the pending messages when xreadID=="0" and new messages when xreadID==">"
 					reply, err := conn.Do("XREADGROUP", "GROUP", groupName, consumerName, "COUNT", count, "BLOCK", blockms, "STREAMS", streamName, xreadID)
 					if err != nil {
 						a.logger.Error("Cannot read from stream", zap.Error(err))
@@ -219,6 +219,42 @@ func (a *Adapter) Start(ctx context.Context) error {
 	a.logger.Info("Done. All consumers are stopped now.")
 
 	return nil
+}
+
+func (a *Adapter) processEntry(ctx context.Context, conn redis.Conn, streamName string, groupName string, consumerName string, xreadID int) {
+	reply, err := conn.Do("XREADGROUP", "GROUP", groupName, consumerName, "COUNT", count, "BLOCK", blockms, "STREAMS", streamName, xreadID)
+	if err != nil {
+		a.logger.Error("Cannot read from stream", zap.Error(err))
+		time.Sleep(1 * time.Second)
+		continue
+	}
+
+	event, err := a.toEvent(reply)
+	if err != nil {
+		if strings.Contains(strings.ToLower(err.Error()), "number of items not equal to one (got 0)") || // no more pending messages!
+			strings.Contains(strings.ToLower(err.Error()), "expected a reply of type array") { // Xreadgroup timed out blocking after 5 seconds
+			xreadID = ">" //ID to read new messages in next iteration
+		} else {
+			a.logger.Error("Cannot convert reply", zap.Error(err))
+			time.Sleep(1 * time.Second)
+		}
+		continue
+	}
+
+	a.logger.Info("Consumer read a message", zap.String("consumerName", consumerName))
+
+	if result := a.client.Send(ctx, *event); !cloudevents.IsACK(result) { //  Event is lost
+		a.logger.Error("Failed to send cloudevent", zap.Any("result", result))
+	}
+
+	_, err = conn.Do("XACK", streamName, groupName, event.ID())
+	if err != nil {
+		a.logger.Error("Cannot ack message", zap.Error(err))
+		xreadID = "0" //ID to read pending message in next iteration
+		time.Sleep(1 * time.Second)
+		continue
+	}
+	a.logger.Info("Consumer acknowledged the message", zap.String("consumerName", consumerName))
 }
 
 func newPool(address string) *redis.Pool {
