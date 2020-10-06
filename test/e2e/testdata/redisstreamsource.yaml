@@ -1,0 +1,12 @@
+apiVersion: sources.knative.dev/v1alpha1
+kind: RedisStreamSource
+metadata:
+  name: myteststream
+spec:
+  address: "redis.redis.svc.cluster.local:6379"
+  stream: myteststream
+  sink:
+    ref:
+      apiVersion: v1
+      kind: Service
+      name: event-display
