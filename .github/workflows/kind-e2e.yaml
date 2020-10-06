@@ -1,7 +1,7 @@
 name: "Kind e2e tests"
 on:
   push:
-    branches: [ 'master', 'release-*' ]
+    branches: [ 'master', 'release-*', 'sourceTests*'  ]
     pull_request:
       branches: [ 'master', 'release-*', 'sourceTests*' ]
 jobs:
