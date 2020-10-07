@@ -26,7 +26,8 @@ jobs:
       - name: Setup kind
         uses: engineerd/setup-kind@v0.4.0
         with:
-          config: test/kind-config.yaml.
+          version: "v0.9.0"
+          config: test/kind-config.yaml
       - name: Update dependencies
         run: |
           hack/update-k8s-deps.sh; hack/update-deps.sh
