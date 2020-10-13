@@ -28,9 +28,6 @@ jobs:
         with:
           version: "v0.9.0"
           config: test/kind-config.yaml
-      - name: Update dependencies
-        run: |
-          hack/update-k8s-deps.sh; hack/update-deps.sh
       - name: Setup cluster
         run: |
           go test -v ./test/... -timeout=15m -tags=e2e -setup=true
