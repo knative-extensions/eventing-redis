@@ -17,6 +17,7 @@ package installer
 
 import (
 	"fmt"
+	"strings"
 )
 
 // Use ko to publish the image.
@@ -29,8 +30,13 @@ func KoPublish(path string) (string, error) {
 }
 
 // Use ko to apply filename
-func KoApply(filename string) (string, error) {
-	out, err := runCmd(fmt.Sprintf("ko apply -f %s", filename))
+func KoApply(filename string, flags ...string) (string, error) {
+	extra := ""
+	if len(flags) > 0 {
+		extra = " " + strings.Join(flags, " ")
+	}
+
+	out, err := runCmd(fmt.Sprintf("ko apply -f %s%s", filename, extra))
 	if err != nil {
 		return out, err
 	}
@@ -38,8 +44,13 @@ func KoApply(filename string) (string, error) {
 }
 
 // Use ko to delete filename
-func KoDelete(filename string) (string, error) {
-	out, err := runCmd(fmt.Sprintf("ko delete -f %s", filename))
+func KoDelete(filename string, flags ...string) (string, error) {
+	extra := ""
+	if len(flags) > 0 {
+		extra = " " + strings.Join(flags, " ")
+	}
+
+	out, err := runCmd(fmt.Sprintf("ko delete -f %s%s", filename, extra))
 	if err != nil {
 		return out, err
 	}

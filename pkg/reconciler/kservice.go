@@ -49,9 +49,9 @@ type KnativeServiceReconciler struct {
 }
 
 func (r *KnativeServiceReconciler) ReconcileService(ctx context.Context, owner kmeta.OwnerRefable, expected *servingv1.Service) (*servingv1.Service, error) {
-	svc, err := r.ServingClientSet.ServingV1().Services(expected.Namespace).Get(expected.Name, metav1.GetOptions{})
+	svc, err := r.ServingClientSet.ServingV1().Services(expected.Namespace).Get(ctx, expected.Name, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
-		svc, err := r.ServingClientSet.ServingV1().Services(expected.Namespace).Create(expected)
+		svc, err := r.ServingClientSet.ServingV1().Services(expected.Namespace).Create(ctx, expected, metav1.CreateOptions{})
 		if err != nil {
 			return nil, newKnativeServiceFailed(expected.Namespace, expected.Name, err)
 		}

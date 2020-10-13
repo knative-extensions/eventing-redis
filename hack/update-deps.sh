@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2018 The Knative Authors
+# Copyright 2020 The Knative Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,25 +14,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+readonly ROOT_DIR=$(dirname "$0")/..
+source "${ROOT_DIR}/vendor/knative.dev/test-infra/scripts/library.sh"
+
 set -o errexit
 set -o nounset
 set -o pipefail
 
 export GO111MODULE=on
 
-source $(dirname $0)/../vendor/knative.dev/test-infra/scripts/library.sh
-
-cd ${REPO_ROOT_DIR}
-
+# This controls the release branch we track.
 VERSION="master"
 
 # The list of dependencies that we track at HEAD and periodically
 # float forward in this repository.
 FLOATING_DEPS=(
-  "knative.dev/pkg@${VERSION}"
-  "knative.dev/eventing@${VERSION}"
   "knative.dev/test-infra@${VERSION}"
+  "knative.dev/pkg@${VERSION}"
 )
+
+cd "${ROOT_DIR}"
 
 # Parse flags to determine any we should pass to dep.
 GO_GET=0
@@ -54,11 +55,8 @@ fi
 go mod tidy
 go mod vendor
 
-rm -rf $(find vendor/ -name 'OWNERS')
-rm -rf $(find vendor/ -name 'OWNERS_ALIASES')
-rm -rf $(find vendor/ -name 'BUILD')
-rm -rf $(find vendor/ -name 'BUILD.bazel')
-rm -rf $(find vendor/ -name '*_test.go')
+find vendor/ -name 'OWNERS' -delete
+find vendor/ -name '*_test.go'-delete
 
 export GOFLAGS=-mod=vendor
 

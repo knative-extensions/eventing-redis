@@ -17,8 +17,11 @@ limitations under the License.
 package lib
 
 import (
+	"context"
 	"fmt"
 	"strings"
+
+	sourcesv1 "knative.dev/eventing/pkg/apis/sources/v1"
 
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1beta1 "k8s.io/api/batch/v1beta1"
@@ -105,7 +108,7 @@ func (c *Client) CreateChannelWithDefaultOrFail(channel *messagingv1beta1.Channe
 	c.T.Logf("Creating default v1beta1 channel %+v", channel)
 	channels := c.Eventing.MessagingV1beta1().Channels(c.Namespace)
 	err := c.RetryWebhookErrors(func(attempts int) (err error) {
-		_, e := channels.Create(channel)
+		_, e := channels.Create(context.Background(), channel, metav1.CreateOptions{})
 		if e != nil {
 			c.T.Logf("Failed to create channel %q: %v", channel.Name, e)
 		}
@@ -122,7 +125,7 @@ func (c *Client) CreateChannelV1WithDefaultOrFail(channel *messagingv1.Channel) 
 	c.T.Logf("Creating default v1 channel %+v", channel)
 	channels := c.Eventing.MessagingV1().Channels(c.Namespace)
 	err := c.RetryWebhookErrors(func(attempts int) (err error) {
-		_, e := channels.Create(channel)
+		_, e := channels.Create(context.Background(), channel, metav1.CreateOptions{})
 		if e != nil {
 			c.T.Logf("Failed to create channel %q: %v", channel.Name, e)
 		}
@@ -148,7 +151,7 @@ func (c *Client) CreateSubscriptionOrFail(
 		c.T.Logf("Creating v1beta1 subscription %s for channel %+v-%s", name, channelTypeMeta, channelName)
 		// update subscription with the new reference
 		var e error
-		retSubscription, e = subscriptions.Create(subscription)
+		retSubscription, e = subscriptions.Create(context.Background(), subscription, metav1.CreateOptions{})
 		if e != nil {
 			c.T.Logf("Failed to create subscription %q: %v", name, e)
 		}
@@ -156,6 +159,22 @@ func (c *Client) CreateSubscriptionOrFail(
 	})
 	if err != nil && !errors.IsAlreadyExists(err) {
 		c.T.Fatalf("Failed to create subscription %q: %v", name, err)
+	}
+	// Note that if the Create above failed with 'already created', then retSubscription won't be valid, so we have to grab it again.
+	if err != nil && errors.IsAlreadyExists(err) {
+		err = c.RetryWebhookErrors(func(attempts int) (err error) {
+			c.T.Logf("Getting v1beta1 subscription %s for channel %+v-%s", name, channelTypeMeta, channelName)
+			// update subscription with the new reference
+			var e error
+			retSubscription, e = subscriptions.Get(context.Background(), name, metav1.GetOptions{})
+			if e != nil {
+				c.T.Logf("Failed to get subscription %q: %v", name, e)
+			}
+			return e
+		})
+		if err != nil {
+			c.T.Fatalf("Failed to get a created subscription %q: %v", name, err)
+		}
 	}
 	c.Tracker.AddObj(retSubscription)
 	return retSubscription
@@ -175,7 +194,7 @@ func (c *Client) CreateSubscriptionV1OrFail(
 		c.T.Logf("Creating v1 subscription %s for channel %+v-%s", name, channelTypeMeta, channelName)
 		// update subscription with the new reference
 		var e error
-		retSubscription, e = subscriptions.Create(subscription)
+		retSubscription, e = subscriptions.Create(context.Background(), subscription, metav1.CreateOptions{})
 		if e != nil {
 			c.T.Logf("Failed to create subscription %q: %v", name, e)
 		}
@@ -183,6 +202,21 @@ func (c *Client) CreateSubscriptionV1OrFail(
 	})
 	if err != nil && !errors.IsAlreadyExists(err) {
 		c.T.Fatalf("Failed to create subscription %q: %v", name, err)
+	}
+	if err != nil && errors.IsAlreadyExists(err) {
+		err = c.RetryWebhookErrors(func(attempts int) (err error) {
+			c.T.Logf("Getting v1 subscription %s for channel %+v-%s", name, channelTypeMeta, channelName)
+			// update subscription with the new reference
+			var e error
+			retSubscription, e = subscriptions.Get(context.Background(), name, metav1.GetOptions{})
+			if e != nil {
+				c.T.Logf("Failed to create subscription %q: %v", name, e)
+			}
+			return e
+		})
+		if err != nil {
+			c.T.Fatalf("Failed to get a created subscription %q: %v", name, err)
+		}
 	}
 	c.Tracker.AddObj(retSubscription)
 	return retSubscription
@@ -217,7 +251,7 @@ func (c *Client) CreateSubscriptionsV1OrFail(
 // CreateConfigMapOrFail will create a configmap or fail the test if there is an error.
 func (c *Client) CreateConfigMapOrFail(name, namespace string, data map[string]string) *corev1.ConfigMap {
 	c.T.Logf("Creating configmap %s", name)
-	configMap, err := c.Kube.Kube.CoreV1().ConfigMaps(namespace).Create(resources.ConfigMap(name, namespace, data))
+	configMap, err := c.Kube.Kube.CoreV1().ConfigMaps(namespace).Create(context.Background(), resources.ConfigMap(name, namespace, data), metav1.CreateOptions{})
 	if err != nil {
 		c.T.Fatalf("Failed to create configmap %s: %v", name, err)
 	}
@@ -238,7 +272,7 @@ func (c *Client) CreateBrokerConfigMapOrFail(name string, channel *metav1.TypeMe
 `, channel.APIVersion, channel.Kind),
 		},
 	}
-	_, err := c.Kube.Kube.CoreV1().ConfigMaps(c.Namespace).Create(cm)
+	_, err := c.Kube.Kube.CoreV1().ConfigMaps(c.Namespace).Create(context.Background(), cm, metav1.CreateOptions{})
 	if err != nil {
 		c.T.Fatalf("Failed to create broker config %q: %v", name, err)
 	}
@@ -260,7 +294,7 @@ func (c *Client) CreateBrokerV1Beta1OrFail(name string, options ...resources.Bro
 		c.T.Logf("Creating v1beta1 broker %s", name)
 		// update broker with the new reference
 		var e error
-		retBroker, e = brokers.Create(broker)
+		retBroker, e = brokers.Create(context.Background(), broker, metav1.CreateOptions{})
 		if e != nil {
 			c.T.Logf("Failed to create v1beta1 broker %q: %v", name, e)
 		}
@@ -268,6 +302,18 @@ func (c *Client) CreateBrokerV1Beta1OrFail(name string, options ...resources.Bro
 	})
 	if err != nil && !errors.IsAlreadyExists(err) {
 		c.T.Fatalf("Failed to create v1beta1 broker %q: %v", name, err)
+	}
+	if err != nil && errors.IsAlreadyExists(err) {
+		c.RetryWebhookErrors(func(attempts int) (err error) {
+			c.T.Logf("Getting v1beta1 broker %s", name)
+			// update broker with the new reference
+			var e error
+			retBroker, e = brokers.Get(context.Background(), name, metav1.GetOptions{})
+			if e != nil {
+				c.T.Fatalf("Failed to get created v1beta1 broker %q: %v", name, e)
+			}
+			return e
+		})
 	}
 	c.Tracker.AddObj(retBroker)
 	return retBroker
@@ -283,7 +329,7 @@ func (c *Client) CreateTriggerOrFailV1Beta1(name string, options ...resources.Tr
 		c.T.Logf("Creating v1beta1 trigger %s", name)
 		// update trigger with the new reference
 		var e error
-		retTrigger, e = triggers.Create(trigger)
+		retTrigger, e = triggers.Create(context.Background(), trigger, metav1.CreateOptions{})
 		if e != nil {
 			c.T.Logf("Failed to create v1beta1 trigger %q: %v", name, e)
 		}
@@ -293,6 +339,23 @@ func (c *Client) CreateTriggerOrFailV1Beta1(name string, options ...resources.Tr
 	if err != nil && !errors.IsAlreadyExists(err) {
 		c.T.Fatalf("Failed to create v1beta1 trigger %q: %v", name, err)
 	}
+
+	if err != nil && errors.IsAlreadyExists(err) {
+		err = c.RetryWebhookErrors(func(attempts int) (err error) {
+			c.T.Logf("Getting v1beta1 trigger %s", name)
+			// update trigger with the new reference
+			var e error
+			retTrigger, e = triggers.Get(context.Background(), name, metav1.GetOptions{})
+			if e != nil {
+				c.T.Logf("Failed to get created v1beta1 trigger %q: %v", name, e)
+			}
+			return e
+		})
+		if err != nil {
+			c.T.Fatalf("Failed to get created v1beta1 trigger %q: %v", name, err)
+		}
+	}
+
 	c.Tracker.AddObj(retTrigger)
 	return retTrigger
 }
@@ -307,7 +370,7 @@ func (c *Client) CreateBrokerV1OrFail(name string, options ...resources.BrokerV1
 		c.T.Logf("Creating v1 broker %s", name)
 		// update broker with the new reference
 		var e error
-		retBroker, e = brokers.Create(broker)
+		retBroker, e = brokers.Create(context.Background(), broker, metav1.CreateOptions{})
 		if e != nil {
 			c.T.Logf("Failed to create v1 broker %q: %v", name, e)
 		}
@@ -315,6 +378,22 @@ func (c *Client) CreateBrokerV1OrFail(name string, options ...resources.BrokerV1
 	})
 	if err != nil && !errors.IsAlreadyExists(err) {
 		c.T.Fatalf("Failed to create v1 broker %q: %v", name, err)
+	}
+
+	if err != nil && errors.IsAlreadyExists(err) {
+		err := c.RetryWebhookErrors(func(attempts int) (err error) {
+			c.T.Logf("Getting v1 broker %s", name)
+			// update broker with the new reference
+			var e error
+			retBroker, e = brokers.Get(context.Background(), name, metav1.GetOptions{})
+			if e != nil {
+				c.T.Logf("Failed to get created v1 broker %q: %v", name, e)
+			}
+			return e
+		})
+		if err != nil {
+			c.T.Fatalf("Failed to get created v1 broker %q: %v", name, err)
+		}
 	}
 	c.Tracker.AddObj(retBroker)
 	return retBroker
@@ -330,7 +409,7 @@ func (c *Client) CreateTriggerV1OrFail(name string, options ...resources.Trigger
 		c.T.Logf("Creating v1 trigger %s", name)
 		// update trigger with the new reference
 		var e error
-		retTrigger, e = triggers.Create(trigger)
+		retTrigger, e = triggers.Create(context.Background(), trigger, metav1.CreateOptions{})
 		if e != nil {
 			c.T.Logf("Failed to create v1 trigger %q: %v", name, e)
 		}
@@ -338,6 +417,21 @@ func (c *Client) CreateTriggerV1OrFail(name string, options ...resources.Trigger
 	})
 	if err != nil && !errors.IsAlreadyExists(err) {
 		c.T.Fatalf("Failed to create v1 trigger %q: %v", name, err)
+	}
+	if err != nil && !errors.IsAlreadyExists(err) {
+		err = c.RetryWebhookErrors(func(attempts int) (err error) {
+			c.T.Logf("Getting v1 trigger %s", name)
+			// update trigger with the new reference
+			var e error
+			retTrigger, e = triggers.Get(context.Background(), name, metav1.GetOptions{})
+			if e != nil {
+				c.T.Logf("Failed to get created v1 trigger %q: %v", name, e)
+			}
+			return e
+		})
+	}
+	if err != nil {
+		c.T.Fatalf("Failed to get created v1 trigger %q: %v", name, err)
 	}
 	c.Tracker.AddObj(retTrigger)
 	return retTrigger
@@ -349,7 +443,7 @@ func (c *Client) CreateFlowsSequenceOrFail(sequence *flowsv1beta1.Sequence) {
 	c.T.Logf("Creating flows sequence %+v", sequence)
 	sequences := c.Eventing.FlowsV1beta1().Sequences(c.Namespace)
 	err := c.RetryWebhookErrors(func(attempts int) (err error) {
-		_, e := sequences.Create(sequence)
+		_, e := sequences.Create(context.Background(), sequence, metav1.CreateOptions{})
 		if e != nil {
 			c.T.Logf("Failed to create flows sequence %q: %v", sequence.Name, e)
 		}
@@ -367,7 +461,7 @@ func (c *Client) CreateFlowsSequenceV1OrFail(sequence *flowsv1.Sequence) {
 	c.T.Logf("Creating flows sequence %+v", sequence)
 	sequences := c.Eventing.FlowsV1().Sequences(c.Namespace)
 	err := c.RetryWebhookErrors(func(attempts int) (err error) {
-		_, e := sequences.Create(sequence)
+		_, e := sequences.Create(context.Background(), sequence, metav1.CreateOptions{})
 		if e != nil {
 			c.T.Logf("Failed to create flows sequence %q: %v", sequence.Name, e)
 		}
@@ -385,7 +479,7 @@ func (c *Client) CreateFlowsParallelOrFail(parallel *flowsv1beta1.Parallel) {
 	c.T.Logf("Creating flows parallel %+v", parallel)
 	parallels := c.Eventing.FlowsV1beta1().Parallels(c.Namespace)
 	err := c.RetryWebhookErrors(func(attempts int) (err error) {
-		_, e := parallels.Create(parallel)
+		_, e := parallels.Create(context.Background(), parallel, metav1.CreateOptions{})
 		if e != nil {
 			c.T.Logf("Failed to create flows parallel %q: %v", parallel.Name, e)
 		}
@@ -403,7 +497,7 @@ func (c *Client) CreateFlowsParallelV1OrFail(parallel *flowsv1.Parallel) {
 	c.T.Logf("Creating flows parallel %+v", parallel)
 	parallels := c.Eventing.FlowsV1().Parallels(c.Namespace)
 	err := c.RetryWebhookErrors(func(attempts int) (err error) {
-		_, e := parallels.Create(parallel)
+		_, e := parallels.Create(context.Background(), parallel, metav1.CreateOptions{})
 		if e != nil {
 			c.T.Logf("Failed to create flows parallel %q: %v", parallel.Name, e)
 		}
@@ -420,7 +514,7 @@ func (c *Client) CreateSinkBindingV1Alpha1OrFail(sb *sourcesv1alpha1.SinkBinding
 	c.T.Logf("Creating sinkbinding %+v", sb)
 	sbInterface := c.Eventing.SourcesV1alpha1().SinkBindings(c.Namespace)
 	err := c.RetryWebhookErrors(func(attempts int) (err error) {
-		_, e := sbInterface.Create(sb)
+		_, e := sbInterface.Create(context.Background(), sb, metav1.CreateOptions{})
 		if e != nil {
 			c.T.Logf("Failed to create sinkbinding %q: %v", sb.Name, e)
 		}
@@ -437,7 +531,7 @@ func (c *Client) CreateSinkBindingV1Alpha2OrFail(sb *sourcesv1alpha2.SinkBinding
 	c.T.Logf("Creating sinkbinding %+v", sb)
 	sbInterface := c.Eventing.SourcesV1alpha2().SinkBindings(c.Namespace)
 	err := c.RetryWebhookErrors(func(attempts int) (err error) {
-		_, e := sbInterface.Create(sb)
+		_, e := sbInterface.Create(context.Background(), sb, metav1.CreateOptions{})
 		if e != nil {
 			c.T.Logf("Failed to create sinkbinding %q: %v", sb.Name, e)
 		}
@@ -454,7 +548,7 @@ func (c *Client) CreateSinkBindingV1Beta1OrFail(sb *sourcesv1beta1.SinkBinding) 
 	c.T.Logf("Creating sinkbinding %+v", sb)
 	sbInterface := c.Eventing.SourcesV1beta1().SinkBindings(c.Namespace)
 	err := c.RetryWebhookErrors(func(attempts int) (err error) {
-		_, e := sbInterface.Create(sb)
+		_, e := sbInterface.Create(context.Background(), sb, metav1.CreateOptions{})
 		if e != nil {
 			c.T.Logf("Failed to create sinkbinding %q: %v", sb.Name, e)
 		}
@@ -471,7 +565,7 @@ func (c *Client) CreateApiServerSourceV1Alpha2OrFail(apiServerSource *sourcesv1a
 	c.T.Logf("Creating apiserversource %+v", apiServerSource)
 	apiServerInterface := c.Eventing.SourcesV1alpha2().ApiServerSources(c.Namespace)
 	err := c.RetryWebhookErrors(func(attempts int) (err error) {
-		_, e := apiServerInterface.Create(apiServerSource)
+		_, e := apiServerInterface.Create(context.Background(), apiServerSource, metav1.CreateOptions{})
 		if e != nil {
 			c.T.Logf("Failed to create apiserversource %q: %v", apiServerSource.Name, err)
 		}
@@ -488,7 +582,24 @@ func (c *Client) CreateApiServerSourceV1Beta1OrFail(apiServerSource *sourcesv1be
 	c.T.Logf("Creating apiserversource %+v", apiServerSource)
 	apiServerInterface := c.Eventing.SourcesV1beta1().ApiServerSources(c.Namespace)
 	err := c.RetryWebhookErrors(func(attempts int) (err error) {
-		_, e := apiServerInterface.Create(apiServerSource)
+		_, e := apiServerInterface.Create(context.Background(), apiServerSource, metav1.CreateOptions{})
+		if e != nil {
+			c.T.Logf("Failed to create apiserversource %q: %v", apiServerSource.Name, e)
+		}
+		return e
+	})
+	if err != nil && !errors.IsAlreadyExists(err) {
+		c.T.Fatalf("Failed to create apiserversource %q: %v", apiServerSource.Name, err)
+	}
+	c.Tracker.AddObj(apiServerSource)
+}
+
+// CreateApiServerSourceV1OrFail will create an v1 ApiServerSource
+func (c *Client) CreateApiServerSourceV1OrFail(apiServerSource *sourcesv1.ApiServerSource) {
+	c.T.Logf("Creating apiserversource %+v", apiServerSource)
+	apiServerInterface := c.Eventing.SourcesV1().ApiServerSources(c.Namespace)
+	err := c.RetryWebhookErrors(func(attempts int) (err error) {
+		_, e := apiServerInterface.Create(context.Background(), apiServerSource, metav1.CreateOptions{})
 		if e != nil {
 			c.T.Logf("Failed to create apiserversource %q: %v", apiServerSource.Name, e)
 		}
@@ -505,7 +616,7 @@ func (c *Client) CreateContainerSourceV1Alpha2OrFail(containerSource *sourcesv1a
 	c.T.Logf("Creating containersource %+v", containerSource)
 	containerInterface := c.Eventing.SourcesV1alpha2().ContainerSources(c.Namespace)
 	err := c.RetryWebhookErrors(func(attempts int) (err error) {
-		_, e := containerInterface.Create(containerSource)
+		_, e := containerInterface.Create(context.Background(), containerSource, metav1.CreateOptions{})
 		if e != nil {
 			c.T.Logf("Failed to create containersource %q: %v", containerSource.Name, e)
 		}
@@ -522,7 +633,7 @@ func (c *Client) CreateContainerSourceV1Beta1OrFail(containerSource *sourcesv1be
 	c.T.Logf("Creating containersource %+v", containerSource)
 	containerInterface := c.Eventing.SourcesV1beta1().ContainerSources(c.Namespace)
 	err := c.RetryWebhookErrors(func(attempts int) (err error) {
-		_, e := containerInterface.Create(containerSource)
+		_, e := containerInterface.Create(context.Background(), containerSource, metav1.CreateOptions{})
 		if e != nil {
 			c.T.Logf("Failed to create containersource %q: %v", containerSource.Name, e)
 		}
@@ -534,12 +645,12 @@ func (c *Client) CreateContainerSourceV1Beta1OrFail(containerSource *sourcesv1be
 	c.Tracker.AddObj(containerSource)
 }
 
-// CreatePingSourceV1Alpha1OrFail will create an PingSource
-func (c *Client) CreatePingSourceV1Alpha1OrFail(pingSource *sourcesv1alpha1.PingSource) {
+// CreatePingSourceV1Alpha2OrFail will create an PingSource
+func (c *Client) CreatePingSourceV1Alpha2OrFail(pingSource *sourcesv1alpha2.PingSource) {
 	c.T.Logf("Creating pingsource %+v", pingSource)
-	pingInterface := c.Eventing.SourcesV1alpha1().PingSources(c.Namespace)
+	pingInterface := c.Eventing.SourcesV1alpha2().PingSources(c.Namespace)
 	err := c.RetryWebhookErrors(func(attempts int) (err error) {
-		_, e := pingInterface.Create(pingSource)
+		_, e := pingInterface.Create(context.Background(), pingSource, metav1.CreateOptions{})
 		if e != nil {
 			c.T.Logf("Failed to create pingsource %q: %v", pingSource.Name, e)
 		}
@@ -551,12 +662,12 @@ func (c *Client) CreatePingSourceV1Alpha1OrFail(pingSource *sourcesv1alpha1.Ping
 	c.Tracker.AddObj(pingSource)
 }
 
-// CreatePingSourceV1Alpha2OrFail will create an PingSource
-func (c *Client) CreatePingSourceV1Alpha2OrFail(pingSource *sourcesv1alpha2.PingSource) {
+// CreatePingSourceV1Beta1OrFail will create an PingSource
+func (c *Client) CreatePingSourceV1Beta1OrFail(pingSource *sourcesv1beta1.PingSource) {
 	c.T.Logf("Creating pingsource %+v", pingSource)
-	pingInterface := c.Eventing.SourcesV1alpha2().PingSources(c.Namespace)
+	pingInterface := c.Eventing.SourcesV1beta1().PingSources(c.Namespace)
 	err := c.RetryWebhookErrors(func(attempts int) (err error) {
-		_, e := pingInterface.Create(pingSource)
+		_, e := pingInterface.Create(context.Background(), pingSource, metav1.CreateOptions{})
 		if e != nil {
 			c.T.Logf("Failed to create pingsource %q: %v", pingSource.Name, e)
 		}
@@ -571,7 +682,7 @@ func (c *Client) CreatePingSourceV1Alpha2OrFail(pingSource *sourcesv1alpha2.Ping
 func (c *Client) CreateServiceOrFail(svc *corev1.Service) *corev1.Service {
 	c.T.Logf("Creating service %+v", svc)
 	namespace := c.Namespace
-	if newSvc, err := c.Kube.Kube.CoreV1().Services(namespace).Create(svc); err != nil {
+	if newSvc, err := c.Kube.Kube.CoreV1().Services(namespace).Create(context.Background(), svc, metav1.CreateOptions{}); err != nil {
 		c.T.Fatalf("Failed to create service %q: %v", svc.Name, err)
 		return nil
 	} else {
@@ -587,7 +698,7 @@ func WithService(name string) func(*corev1.Pod, *Client) error {
 		svc := resources.ServiceDefaultHTTP(name, pod.Labels)
 
 		svcs := client.Kube.Kube.CoreV1().Services(namespace)
-		if _, err := svcs.Create(svc); err != nil {
+		if _, err := svcs.Create(context.Background(), svc, metav1.CreateOptions{}); err != nil {
 			return err
 		}
 		client.Tracker.Add(coreAPIGroup, coreAPIVersion, "services", namespace, name)
@@ -611,7 +722,7 @@ func (c *Client) CreatePodOrFail(pod *corev1.Pod, options ...func(*corev1.Pod, *
 
 	err := reconciler.RetryUpdateConflicts(func(attempts int) (err error) {
 		c.T.Logf("Creating pod %+v", pod)
-		_, e := c.Kube.CreatePod(pod)
+		_, e := c.Kube.CreatePod(context.Background(), pod)
 		return e
 	})
 	if err != nil {
@@ -641,7 +752,7 @@ func (c *Client) CreateDeploymentOrFail(deploy *appsv1.Deployment, options ...fu
 	c.applyTracingEnv(&deploy.Spec.Template.Spec)
 
 	c.T.Logf("Creating deployment %+v", deploy)
-	if _, err := c.Kube.Kube.AppsV1().Deployments(deploy.Namespace).Create(deploy); err != nil {
+	if _, err := c.Kube.Kube.AppsV1().Deployments(deploy.Namespace).Create(context.Background(), deploy, metav1.CreateOptions{}); err != nil {
 		c.T.Fatalf("Failed to create deploy %q: %v", deploy.Name, err)
 	}
 	c.Tracker.Add("apps", "v1", "deployments", namespace, deploy.Name)
@@ -662,7 +773,7 @@ func (c *Client) CreateCronJobOrFail(cronjob *batchv1beta1.CronJob, options ...f
 	c.applyTracingEnv(&cronjob.Spec.JobTemplate.Spec.Template.Spec)
 
 	c.T.Logf("Creating cronjob %+v", cronjob)
-	if _, err := c.Kube.Kube.BatchV1beta1().CronJobs(cronjob.Namespace).Create(cronjob); err != nil {
+	if _, err := c.Kube.Kube.BatchV1beta1().CronJobs(cronjob.Namespace).Create(context.Background(), cronjob, metav1.CreateOptions{}); err != nil {
 		c.T.Fatalf("Failed to create cronjob %q: %v", cronjob.Name, err)
 	}
 	c.Tracker.Add("batch", "v1beta1", "cronjobs", namespace, cronjob.Name)
@@ -674,7 +785,7 @@ func (c *Client) CreateServiceAccountOrFail(saName string) {
 	sa := resources.ServiceAccount(saName, namespace)
 	sas := c.Kube.Kube.CoreV1().ServiceAccounts(namespace)
 	c.T.Logf("Creating service account %+v", sa)
-	if _, err := sas.Create(sa); err != nil {
+	if _, err := sas.Create(context.Background(), sa, metav1.CreateOptions{}); err != nil {
 		c.T.Fatalf("Failed to create service account %q: %v", saName, err)
 	}
 	c.Tracker.Add(coreAPIGroup, coreAPIVersion, "serviceaccounts", namespace, saName)
@@ -693,7 +804,7 @@ func (c *Client) CreateServiceAccountOrFail(saName string) {
 func (c *Client) CreateClusterRoleOrFail(cr *rbacv1.ClusterRole) {
 	c.T.Logf("Creating cluster role %+v", cr)
 	crs := c.Kube.Kube.RbacV1().ClusterRoles()
-	if _, err := crs.Create(cr); err != nil && !errors.IsAlreadyExists(err) {
+	if _, err := crs.Create(context.Background(), cr, metav1.CreateOptions{}); err != nil && !errors.IsAlreadyExists(err) {
 		c.T.Fatalf("Failed to create cluster role %q: %v", cr.Name, err)
 	}
 	c.Tracker.Add(rbacAPIGroup, rbacAPIVersion, "clusterroles", "", cr.Name)
@@ -704,7 +815,7 @@ func (c *Client) CreateRoleOrFail(r *rbacv1.Role) {
 	c.T.Logf("Creating role %+v", r)
 	namespace := c.Namespace
 	rs := c.Kube.Kube.RbacV1().Roles(namespace)
-	if _, err := rs.Create(r); err != nil && !errors.IsAlreadyExists(err) {
+	if _, err := rs.Create(context.Background(), r, metav1.CreateOptions{}); err != nil && !errors.IsAlreadyExists(err) {
 		c.T.Fatalf("Failed to create role %q: %v", r.Name, err)
 	}
 	c.Tracker.Add(rbacAPIGroup, rbacAPIVersion, "roles", namespace, r.Name)
@@ -722,7 +833,7 @@ func (c *Client) CreateRoleBindingOrFail(saName, rKind, rName, rbName, rbNamespa
 	rbs := c.Kube.Kube.RbacV1().RoleBindings(rbNamespace)
 
 	c.T.Logf("Creating role binding %+v", rb)
-	if _, err := rbs.Create(rb); err != nil && !errors.IsAlreadyExists(err) {
+	if _, err := rbs.Create(context.Background(), rb, metav1.CreateOptions{}); err != nil && !errors.IsAlreadyExists(err) {
 		c.T.Fatalf("Failed to create role binding %q: %v", rbName, err)
 	}
 	c.Tracker.Add(rbacAPIGroup, rbacAPIVersion, "rolebindings", rbNamespace, rb.GetName())
@@ -735,7 +846,7 @@ func (c *Client) CreateClusterRoleBindingOrFail(saName, crName, crbName string) 
 	crbs := c.Kube.Kube.RbacV1().ClusterRoleBindings()
 
 	c.T.Logf("Creating cluster role binding %+v", crb)
-	if _, err := crbs.Create(crb); err != nil && !errors.IsAlreadyExists(err) {
+	if _, err := crbs.Create(context.Background(), crb, metav1.CreateOptions{}); err != nil && !errors.IsAlreadyExists(err) {
 		c.T.Fatalf("Failed to create cluster role binding %q: %v", crbName, err)
 	}
 	c.Tracker.Add(rbacAPIGroup, rbacAPIVersion, "clusterrolebindings", "", crb.GetName())
@@ -746,10 +857,9 @@ const (
 	saIngressName = "eventing-broker-ingress"
 	saFilterName  = "eventing-broker-filter"
 
-	// the three ClusterRoles are preinstalled in Knative Eventing setup
-	crIngressName      = "eventing-broker-ingress"
-	crFilterName       = "eventing-broker-filter"
-	crConfigReaderName = "eventing-config-reader"
+	// the ClusterRoles are preinstalled in Knative Eventing setup
+	crIngressName = "eventing-broker-ingress"
+	crFilterName  = "eventing-broker-filter"
 )
 
 // CreateRBACResourcesForBrokers creates required RBAC resources for creating Brokers,

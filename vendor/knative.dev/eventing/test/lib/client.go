@@ -20,6 +20,7 @@ limitations under the License.
 package lib
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -54,6 +55,8 @@ type Client struct {
 	podsCreated []string
 
 	tracingEnv corev1.EnvVar
+
+	cleanup func()
 }
 
 // NewClient instantiates and returns several clientsets required for making request to the
@@ -98,8 +101,33 @@ func NewClient(configPath string, clusterName string, namespace string, t *testi
 	return client, nil
 }
 
+// Cleanup acts similarly to testing.T, but it's tied to the client lifecycle
+func (c *Client) Cleanup(f func()) {
+	oldCleanup := c.cleanup
+	c.cleanup = func() {
+		if oldCleanup != nil {
+			defer oldCleanup()
+		}
+		f()
+	}
+}
+
+func (c *Client) runCleanup() (err error) {
+	if c.cleanup == nil {
+		return nil
+	}
+	defer func() {
+		if panicVal := recover(); panicVal != nil {
+			err = fmt.Errorf("panic in cleanup function: %+v", panicVal)
+		}
+	}()
+
+	c.cleanup()
+	return nil
+}
+
 func getTracingConfig(c *kubernetes.Clientset) (corev1.EnvVar, error) {
-	cm, err := c.CoreV1().ConfigMaps(resources.SystemNamespace).Get("config-tracing", metav1.GetOptions{})
+	cm, err := c.CoreV1().ConfigMaps(resources.SystemNamespace).Get(context.Background(), "config-tracing", metav1.GetOptions{})
 	if err != nil {
 		return corev1.EnvVar{}, fmt.Errorf("error while retrieving the config-tracing config map: %+v", errors.WithStack(err))
 	}
