@@ -19,34 +19,11 @@ set -o nounset
 set -o pipefail
 
 export GO111MODULE=on
-export K8S_VERSION="${1:-v0.17.6}"
 
-K8S_DEPS=(
-  "k8s.io/api"
-  "k8s.io/apiextensions-apiserver"
-  "k8s.io/apimachinery"
-  "k8s.io/apiserver"
-  "k8s.io/code-generator"
-  "k8s.io/client-go"
-)
+if [ -z "${GOPATH:-}" ]; then
+  export GOPATH=$(go env GOPATH)
+fi
 
-function update_module {
-  local dep="${1}"
-  local version="${2}"
+source $(dirname $0)/../vendor/knative.dev/test-infra/scripts/library.sh
 
-
-  echo "Updating ${dep} to ${version}"
-
-  go mod edit \
-    -require="${dep}@${version}" \
-    -replace="${dep}=${dep}@${version}"
-}
-
-for dep in "${K8S_DEPS[@]}"
-do
-  update_module "${dep}" "${K8S_VERSION}"
-done
-
-
-./hack/update-deps.sh
-
+go run "${REPO_ROOT_DIR}/vendor/knative.dev/pkg/configmap/hash-gen" "${REPO_ROOT_DIR}"/config/core/configmaps/*.yaml
