@@ -15,7 +15,7 @@ require (
 	knative.dev/pkg v0.0.0-20201012163217-54ad6c6d39a7
 	knative.dev/reconciler-test v0.0.0-20201009163621-6dcba548c50f
 	knative.dev/serving v0.18.0
-	knative.dev/test-infra v0.0.0-20201009204121-322fb08edae7
+	knative.dev/test-infra v0.0.0-20201014021030-ae3984a33f82
 )
 
 replace (

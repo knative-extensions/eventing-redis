@@ -827,11 +827,15 @@ func (e *ProcessEnv) goEnv() (map[string]string, error) {
 }
 
 func (e *ProcessEnv) matchFile(dir, name string) (bool, error) {
+<<<<<<< HEAD
 	bctx, err := e.buildContext()
 	if err != nil {
 		return false, err
 	}
 	return bctx.MatchFile(dir, name)
+=======
+	return build.Default.MatchFile(dir, name)
+>>>>>>> origin/master
 }
 
 // CopyConfig copies the env's configuration into a new env.
@@ -928,6 +932,7 @@ func (e *ProcessEnv) buildContext() (*build.Context, error) {
 		dir.SetString(e.WorkingDir)
 	}
 
+<<<<<<< HEAD
 	// Since Go 1.11, go/build.Context.Import may invoke 'go list' depending on
 	// the value in GO111MODULE in the process's environment. We always want to
 	// run in GOPATH mode when calling Import, so we need to prevent this from
@@ -939,6 +944,8 @@ func (e *ProcessEnv) buildContext() (*build.Context, error) {
 	// unlikely to change before GOPATH support is removed.
 	ctx.ReadDir = ioutil.ReadDir
 
+=======
+>>>>>>> origin/master
 	return &ctx, nil
 }
 
