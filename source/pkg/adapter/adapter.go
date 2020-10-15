@@ -108,7 +108,7 @@ func (a *Adapter) Start(ctx context.Context) error {
 
 	a.logger.Info("Number of consumers from config:", zap.Int("NumConsumers", a.config.NumConsumers))
 
-	for i := 0; i < a.config.NumConsumers; i++ {
+	for i := 0; i < a.config.NumConsumers; i++ { //TODO: Read NumConsumers data from new config struct??
 		waitGroup.Add(1)
 
 		go func(wg *sync.WaitGroup, j int) {

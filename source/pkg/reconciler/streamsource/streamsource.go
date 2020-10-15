@@ -64,7 +64,6 @@ type Reconciler struct {
 
 // Check that our Reconciler implements ReconcileKind.
 var _ streamsourcereconciler.Interface = (*Reconciler)(nil)
-var _ streamsourcereconciler.Finalizer = (*Reconciler)(nil)
 
 // Check that our Reconciler implements FinalizeKind.
 var _ streamsourcereconciler.Finalizer = (*Reconciler)(nil)
