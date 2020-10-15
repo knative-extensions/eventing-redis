@@ -20,7 +20,6 @@ import (
 	"context"
 
 	"github.com/kelseyhightower/envconfig"
-	"go.uber.org/zap"
 	"k8s.io/client-go/tools/cache"
 	reconcilersource "knative.dev/eventing/pkg/reconciler/source"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
@@ -29,6 +28,8 @@ import (
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/resolver"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"knative.dev/eventing-redis/source/pkg/apis/sources/v1alpha1"
 	redisstreamsourceinformer "knative.dev/eventing-redis/source/pkg/client/injection/informers/sources/v1alpha1/redisstreamsource"
@@ -43,27 +44,32 @@ type envConfig struct {
 	Image string `envconfig:"STREAMSOURCE_RA_IMAGE" required:"true"`
 }
 
-func WithRedis(cw *ConfigWatcher, cmw configmap.Watcher) reconcilersource.configWatcherOption {
-	cw.loggingCfg = &pkglogging.Config{}
-	watchConfigMap(cmw, pkglogging.ConfigMapName(), UpdateFromRedisConfigMap)
+func WithRedis(cw *reconcilersource.ConfigWatcher, cmw configmap.Watcher) {
+	cmName := ConfigMapName()
+	obs := updateFromRedisConfigMap
+	if dcmw, ok := cmw.(configmap.DefaultingWatcher); ok {
+		dcmw.WatchWithDefault(corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{Name: cmName},
+			Data:       map[string]string{},
+		}, obs)
+
+	} else {
+		cmw.Watch(cmName, obs)
+	}
 }
 
-func UpdateFromRedisConfigMap(cfg *corev1.ConfigMap) {
+func updateFromRedisConfigMap(cfg *corev1.ConfigMap) {
 	if cfg == nil {
 		return
 	}
 
 	delete(cfg.Data, "_example")
 
-	redisCfg, err := pkglogging.NewConfigFromConfigMap(cfg)
+	_, err := NewConfigFromConfigMap(cfg)
 	if err != nil {
-		cw.logger.Warn("failed to create redis config from ConfigMap", zap.String("cfg.Name", cfg.Name))
 		return
 	}
 
-	cw.redisCfg = redisCfg
-
-	cw.logger.Debug("Updated redis config from ConfigMap", zap.Any("ConfigMap", cfg))
 }
 
 // NewController initializes the controller and is called by the generated code
@@ -85,7 +91,7 @@ func NewController(
 		ssr:                 &reconciler.StatefulSetReconciler{KubeClientSet: kubeclient.Get(ctx)},
 		rbr:                 &reconciler.RoleBindingReconciler{KubeClientSet: kubeclient.Get(ctx)},
 		sar:                 &reconciler.ServiceAccountReconciler{KubeClientSet: kubeclient.Get(ctx)},
-		configs:             reconcilersource.WatchConfigurations(ctx, component, cmw, WithRedis()),
+		configs:             reconcilersource.WatchConfigurations(ctx, component, cmw, WithRedis),
 		receiveAdapterImage: env.Image,
 	}
 

@@ -25,6 +25,5 @@ type Config struct {
 	Address         string `envconfig:"ADDRESS" required:"true"`
 	Stream          string `envconfig:"STREAM" required:"true"`
 	PodName         string `envconfig:"NAME" required:"true"`
-	MaxPendingCount int    `envconfig:"MAXPENDINGCOUNT" default:"10"`
 	NumConsumers    int    `envconfig:"CONFIG_REDIS_NUMCONSUMERS" default:"5"`
 }
