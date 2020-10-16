@@ -34,7 +34,7 @@ func AdapterName(source *sourcesv1alpha1.RedisStreamSource) string {
 
 // MakeReceiveAdapter generates (but does not insert into K8s) the Receive Adapter Deployment for
 // RedisStream Sources.
-func MakeReceiveAdapter(source *sourcesv1alpha1.RedisStreamSource, image string, sinkURI string) *appsv1.StatefulSet {
+func MakeReceiveAdapter(source *sourcesv1alpha1.RedisStreamSource, image string, sinkURI string, numConsumers string) *appsv1.StatefulSet {
 	replicas := int32(1)
 	labels := Labels(source.Name)
 	return &appsv1.StatefulSet{
@@ -71,6 +71,9 @@ func MakeReceiveAdapter(source *sourcesv1alpha1.RedisStreamSource, image string,
 								Name:  "K_SINK",
 								Value: sinkURI,
 							}, {
+								Name:  "NUM_CONSUMERS",
+								Value: numConsumers,
+							},{
 								Name: "NAMESPACE",
 								ValueFrom: &corev1.EnvVarSource{
 									FieldRef: &corev1.ObjectFieldSelector{

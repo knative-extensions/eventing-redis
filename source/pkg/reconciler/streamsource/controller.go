@@ -21,6 +21,11 @@ import (
 
 	"github.com/kelseyhightower/envconfig"
 	"k8s.io/client-go/tools/cache"
+
+	"go.uber.org/zap"
+
+	v1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	reconcilersource "knative.dev/eventing/pkg/reconciler/source"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	statefulsetinformer "knative.dev/pkg/client/injection/kube/informers/apps/v1/statefulset"
@@ -28,6 +33,7 @@ import (
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/resolver"
+	"knative.dev/pkg/system"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -69,7 +75,6 @@ func updateFromRedisConfigMap(cfg *corev1.ConfigMap) {
 	if err != nil {
 		return
 	}
-
 }
 
 // NewController initializes the controller and is called by the generated code
@@ -98,6 +103,15 @@ func NewController(
 	impl := redisstreamsourcereconciler.NewImpl(ctx, r)
 
 	r.sinkResolver = resolver.NewURIResolver(ctx, impl.EnqueueKey)
+
+	// Get and Watch the Redis config map and dynamically update Redis configuration.
+	if _, err := kubeclient.Get(ctx).CoreV1().ConfigMaps(system.Namespace()).Get(ConfigMapName(), metav1.GetOptions{}); err == nil {
+		cmw.Watch(ConfigMapName(), func(configMap *v1.ConfigMap) {
+			r.updateRedisConfig(ctx, configMap)
+		})
+	} else if !apierrors.IsNotFound(err) {
+		logging.FromContext(ctx).With(zap.Error(err)).Fatal("Error reading ConfigMap'")
+	}
 
 	logging.FromContext(ctx).Info("Setting up event handlers")
 

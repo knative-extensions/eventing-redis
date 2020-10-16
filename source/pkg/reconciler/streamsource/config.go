@@ -16,25 +16,28 @@ limitations under the License.
 package streamsource
 
 import (
+	"fmt"
 	"os"
 
 	corev1 "k8s.io/api/core/v1"
+	"knative.dev/pkg/configmap"
 )
 
 const (
 	configMapNameEnv   = "CONFIG_REDIS_NUMCONSUMERS"
 	redisConfigKey     = "numConsumers"
+	DefaultNumConsumers = "10"
 )
 
-// Config contains the configuration defined in the redis ConfigMap.
+// RedisConfig contains the configuration defined in the redis ConfigMap.
 // +k8s:deepcopy-gen=true
-type Config struct {
+type RedisConfig struct {
 	NumConsumers    string
 }
 
-func defaultConfig() *Config {
-	return &Config{
-		NumConsumers: "5",
+func defaultConfig() *RedisConfig {
+	return &RedisConfig{
+		NumConsumers: DefaultNumConsumers,
 	}
 }
 
@@ -49,7 +52,7 @@ func ConfigMapName() string {
 
 // NewConfigFromMap creates a RedisConfig from the supplied map,
 // expecting the given list of components.
-func NewConfigFromMap(data map[string]string) (*Config, error) {
+func NewConfigFromMap(data map[string]string) (*RedisConfig, error) {
 	rc := defaultConfig()
 	if numC, ok := data[redisConfigKey]; ok {
 		rc.NumConsumers  = numC
@@ -57,8 +60,28 @@ func NewConfigFromMap(data map[string]string) (*Config, error) {
 	return rc, nil
 }
 
-// NewConfigFromConfigMap creates a Config from the supplied ConfigMap,
+// NewConfigFromConfigMap creates a RedisConfig from the supplied ConfigMap,
 // expecting the given list of components.
-func NewConfigFromConfigMap(configMap *corev1.ConfigMap) (*Config, error) {
+func NewConfigFromConfigMap(configMap *corev1.ConfigMap) (*RedisConfig, error) {
 	return NewConfigFromMap(configMap.Data)
+}
+
+// GetRedisConfig returns the details of the Redis stream.
+func GetRedisConfig(configMap map[string]string) (*RedisConfig, error) {
+	if len(configMap) == 0 {
+		return nil, fmt.Errorf("missing configuration")
+	}
+
+	config := &RedisConfig{
+		NumConsumers:  DefaultNumConsumers,
+	}
+
+	err := configmap.Parse(configMap,
+		configmap.AsString(redisConfigKey, &config.NumConsumers),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return config, nil
 }
