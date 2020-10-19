@@ -29,7 +29,7 @@ import (
 )
 
 var (
-	num = int32(1)
+	num                  = int32(1)
 	availableStatefulSet = &appsv1.StatefulSet{
 		Spec: appsv1.StatefulSetSpec{
 			Replicas: &num,

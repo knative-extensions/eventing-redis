@@ -18,11 +18,11 @@ package adapter
 
 import (
 	"context"
-    "testing"
-    "github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/require"
+	"testing"
 )
 
-func TestAdapter_Start(t *testing.T) { 
+func TestAdapter_Start(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	a := NewAdapter(ctx, NewEnvConfig(), nil)

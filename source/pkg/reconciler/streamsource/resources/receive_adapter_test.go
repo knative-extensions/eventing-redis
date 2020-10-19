@@ -22,9 +22,9 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1alpha1 "knative.dev/eventing-redis/source/pkg/apis/sources/v1alpha1"
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/kmp"
-	v1alpha1 "knative.dev/eventing-redis/source/pkg/apis/sources/v1alpha1"
 )
 
 func TestMakeReceiveAdapter(t *testing.T) {
@@ -35,7 +35,7 @@ func TestMakeReceiveAdapter(t *testing.T) {
 		},
 		Spec: v1alpha1.RedisStreamSourceSpec{
 			RedisConnection: v1alpha1.RedisConnection{
-				Address:  "redis.redis.svc.cluster.local:6379",
+				Address: "redis.redis.svc.cluster.local:6379",
 			},
 			Stream: "mystream",
 		},
@@ -49,7 +49,7 @@ func TestMakeReceiveAdapter(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace:    "source-namespace",
 			GenerateName: "source-name-",
-			Labels: labels,
+			Labels:       labels,
 			OwnerReferences: []metav1.OwnerReference{
 				*kmeta.NewControllerRef(src),
 			},
