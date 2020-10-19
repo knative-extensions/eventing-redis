@@ -1,12 +1,12 @@
 name: "Kind e2e tests"
 on:
   push:
-    branches: [ 'master', 'release-*', 'sourceTests*'  ]
+    branches: [ 'master', 'release-*' ]
     pull_request:
-      branches: [ 'master', 'release-*', 'sourceTests*' ]
+      branches: [ 'master', 'release-*' ]
 jobs:
   e2e-testing:
-    name: RedisSource Test
+    name: RedisSourceTest
     runs-on: ubuntu-latest
     env:
       KO_DOCKER_REPO: kind.local
