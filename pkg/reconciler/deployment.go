@@ -56,9 +56,9 @@ type DeploymentReconciler struct {
 
 func (r *DeploymentReconciler) ReconcileDeployment(ctx context.Context, owner kmeta.OwnerRefable, expected *appsv1.Deployment) (*appsv1.Deployment, pkgreconciler.Event) {
 	namespace := owner.GetObjectMeta().GetNamespace()
-	ra, err := r.KubeClientSet.AppsV1().Deployments(namespace).Get(expected.Name, metav1.GetOptions{})
+	ra, err := r.KubeClientSet.AppsV1().Deployments(namespace).Get(ctx, expected.Name, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
-		ra, err = r.KubeClientSet.AppsV1().Deployments(namespace).Create(expected)
+		ra, err = r.KubeClientSet.AppsV1().Deployments(namespace).Create(ctx, expected, metav1.CreateOptions{})
 		if err != nil {
 			return nil, newDeploymentFailed(expected.Namespace, expected.Name, err)
 		}
@@ -69,7 +69,7 @@ func (r *DeploymentReconciler) ReconcileDeployment(ctx context.Context, owner km
 		return nil, fmt.Errorf("deployment %q is not owned by %s %q",
 			ra.Name, owner.GetGroupVersionKind().Kind, owner.GetObjectMeta().GetName())
 	} else if r.podSpecChanged(expected.Spec.Template.Spec, ra.Spec.Template.Spec) {
-		if ra, err = r.KubeClientSet.AppsV1().Deployments(namespace).Update(ra); err != nil {
+		if ra, err = r.KubeClientSet.AppsV1().Deployments(namespace).Update(ctx, ra, metav1.UpdateOptions{}); err != nil {
 			return ra, err
 		}
 		return ra, newDeploymentUpdated(ra.Namespace, ra.Name)

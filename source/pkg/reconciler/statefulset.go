@@ -56,9 +56,9 @@ type StatefulSetReconciler struct {
 
 func (r *StatefulSetReconciler) ReconcileStatefulSet(ctx context.Context, owner kmeta.OwnerRefable, expected *appsv1.StatefulSet) (*appsv1.StatefulSet, pkgreconciler.Event) {
 	namespace := owner.GetObjectMeta().GetNamespace()
-	ra, err := r.KubeClientSet.AppsV1().StatefulSets(namespace).Get(expected.Name, metav1.GetOptions{})
+	ra, err := r.KubeClientSet.AppsV1().StatefulSets(namespace).Get(ctx, expected.Name, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
-		ra, err = r.KubeClientSet.AppsV1().StatefulSets(namespace).Create(expected)
+		ra, err = r.KubeClientSet.AppsV1().StatefulSets(namespace).Create(ctx, expected, metav1.CreateOptions{})
 		if err != nil {
 			return nil, newStatefulSetFailed(expected.Namespace, expected.Name, err)
 		}
@@ -69,7 +69,7 @@ func (r *StatefulSetReconciler) ReconcileStatefulSet(ctx context.Context, owner 
 		return nil, fmt.Errorf("statefulset %q is not owned by %s %q",
 			ra.Name, owner.GetGroupVersionKind().Kind, owner.GetObjectMeta().GetName())
 	} else if r.podSpecChanged(expected.Spec.Template.Spec, ra.Spec.Template.Spec) {
-		if ra, err = r.KubeClientSet.AppsV1().StatefulSets(namespace).Update(ra); err != nil {
+		if ra, err = r.KubeClientSet.AppsV1().StatefulSets(namespace).Update(ctx, ra, metav1.UpdateOptions{}); err != nil {
 			return ra, err
 		}
 		return ra, newStatefulSetUpdated(ra.Namespace, ra.Name)

@@ -21,6 +21,7 @@ package v1alpha1
 import (
 	time "time"
 
+	"golang.org/x/net/context"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -61,13 +62,13 @@ func NewFilteredRedisStreamSinkInformer(client versioned.Interface, namespace st
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.SourcesV1alpha1().RedisStreamSinks(namespace).List(options)
+				return client.SourcesV1alpha1().RedisStreamSinks(namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.SourcesV1alpha1().RedisStreamSinks(namespace).Watch(options)
+				return client.SourcesV1alpha1().RedisStreamSinks(namespace).Watch(context.TODO(), options)
 			},
 		},
 		&sinksv1alpha1.RedisStreamSink{},

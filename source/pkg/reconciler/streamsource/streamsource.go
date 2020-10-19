@@ -64,6 +64,7 @@ type Reconciler struct {
 
 // Check that our Reconciler implements ReconcileKind.
 var _ streamsourcereconciler.Interface = (*Reconciler)(nil)
+var _ streamsourcereconciler.Finalizer = (*Reconciler)(nil)
 
 // Check that our Reconciler implements FinalizeKind.
 var _ streamsourcereconciler.Finalizer = (*Reconciler)(nil)
@@ -78,7 +79,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.
 		}
 	}
 
-	sinkURI, err := r.sinkResolver.URIFromDestinationV1(*dest, source)
+	sinkURI, err := r.sinkResolver.URIFromDestinationV1(ctx, *dest, source)
 	if err != nil {
 		source.Status.MarkNoSink("NotFound", "")
 		return newWarningSinkNotFound(dest)

@@ -51,9 +51,10 @@ func TestScanXRead(t *testing.T) {
 					Items: []StreamItem{
 						{
 							ID: "1519073278252-0",
-							FieldValues: []interface{}{
-								[]byte("foo"),
-								[]byte("value_1")}},
+							FieldValues: []string{
+								"foo",
+								"value_1"},
+						},
 					},
 				},
 			},
