@@ -79,7 +79,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.
 		}
 	}
 
-	sinkURI, err := r.sinkResolver.URIFromDestinationV1(*dest, source)
+	sinkURI, err := r.sinkResolver.URIFromDestinationV1(ctx, *dest, source)
 	if err != nil {
 		source.Status.MarkNoSink("NotFound", "")
 		return newWarningSinkNotFound(dest)

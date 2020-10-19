@@ -46,9 +46,9 @@ type ServiceAccountReconciler struct {
 }
 
 func (r *ServiceAccountReconciler) ReconcileServiceAccount(ctx context.Context, owner kmeta.OwnerRefable, expected *corev1.ServiceAccount) (*corev1.ServiceAccount, error) {
-	rb, err := r.KubeClientSet.CoreV1().ServiceAccounts(expected.Namespace).Get(expected.Name, metav1.GetOptions{})
+	rb, err := r.KubeClientSet.CoreV1().ServiceAccounts(expected.Namespace).Get(ctx, expected.Name, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
-		rb, err := r.KubeClientSet.CoreV1().ServiceAccounts(expected.Namespace).Create(expected)
+		rb, err := r.KubeClientSet.CoreV1().ServiceAccounts(expected.Namespace).Create(ctx, expected, metav1.CreateOptions{})
 		if err != nil {
 			return nil, newServiceAccountFailed(expected.Namespace, expected.Name, err)
 		}

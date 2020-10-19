@@ -47,9 +47,9 @@ type RoleBindingReconciler struct {
 }
 
 func (r *RoleBindingReconciler) ReconcileRoleBinding(ctx context.Context, owner kmeta.OwnerRefable, expected *rbacv1.RoleBinding) (*rbacv1.RoleBinding, error) {
-	rb, err := r.KubeClientSet.RbacV1().RoleBindings(expected.Namespace).Get(expected.Name, metav1.GetOptions{})
+	rb, err := r.KubeClientSet.RbacV1().RoleBindings(expected.Namespace).Get(ctx, expected.Name, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
-		rb, err := r.KubeClientSet.RbacV1().RoleBindings(expected.Namespace).Create(expected)
+		rb, err := r.KubeClientSet.RbacV1().RoleBindings(expected.Namespace).Create(ctx, expected, metav1.CreateOptions{})
 		if err != nil {
 			return nil, newRoleBindingFailed(expected.Namespace, expected.Name, err)
 		}
