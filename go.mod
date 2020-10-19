@@ -7,15 +7,16 @@ require (
 	github.com/gomodule/redigo v1.8.2
 	github.com/google/go-cmp v0.5.2
 	github.com/kelseyhightower/envconfig v1.4.0
+	github.com/onsi/gomega v1.10.2 // indirect
 	github.com/stretchr/testify v1.5.1
 	go.uber.org/zap v1.16.0
 	golang.org/x/net v0.0.0-20200904194848-62affa334b73
+	golang.org/x/tools v0.0.0-20200918201133-e94ab7288189 // indirect
 	k8s.io/api v0.18.8
 	k8s.io/apimachinery v0.18.8
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
 	knative.dev/eventing v0.18.1-0.20201001144430-5646fe1b227d
 	knative.dev/pkg v0.0.0-20201012163217-54ad6c6d39a7
-	knative.dev/reconciler-test v0.0.0-20201009163621-6dcba548c50f // indirect
 	knative.dev/serving v0.18.0
 	knative.dev/test-infra v0.0.0-20201014021030-ae3984a33f82
 )
