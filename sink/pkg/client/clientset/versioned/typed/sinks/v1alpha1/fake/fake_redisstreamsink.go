@@ -81,7 +81,7 @@ func (c *FakeRedisStreamSinks) Watch(ctx context.Context, opts v1.ListOptions) (
 }
 
 // Create takes the representation of a redisStreamSink and creates it.  Returns the server's representation of the redisStreamSink, and an error, if there is any.
-func (c *FakeRedisStreamSinks) Create(ctx context.Context, redisStreamSink *v1alpha1.RedisStreamSink) (result *v1alpha1.RedisStreamSink, err error) {
+func (c *FakeRedisStreamSinks) Create(ctx context.Context, redisStreamSink *v1alpha1.RedisStreamSink, opts v1.CreateOptions) (result *v1alpha1.RedisStreamSink, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewCreateAction(redisstreamsinksResource, c.ns, redisStreamSink), &v1alpha1.RedisStreamSink{})
 
@@ -92,7 +92,7 @@ func (c *FakeRedisStreamSinks) Create(ctx context.Context, redisStreamSink *v1al
 }
 
 // Update takes the representation of a redisStreamSink and updates it. Returns the server's representation of the redisStreamSink, and an error, if there is any.
-func (c *FakeRedisStreamSinks) Update(ctx context.Context, redisStreamSink *v1alpha1.RedisStreamSink) (result *v1alpha1.RedisStreamSink, err error) {
+func (c *FakeRedisStreamSinks) Update(ctx context.Context, redisStreamSink *v1alpha1.RedisStreamSink, opts v1.UpdateOptions) (result *v1alpha1.RedisStreamSink, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateAction(redisstreamsinksResource, c.ns, redisStreamSink), &v1alpha1.RedisStreamSink{})
 
@@ -104,7 +104,7 @@ func (c *FakeRedisStreamSinks) Update(ctx context.Context, redisStreamSink *v1al
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeRedisStreamSinks) UpdateStatus(ctx context.Context, redisStreamSink *v1alpha1.RedisStreamSink) (*v1alpha1.RedisStreamSink, error) {
+func (c *FakeRedisStreamSinks) UpdateStatus(ctx context.Context, redisStreamSink *v1alpha1.RedisStreamSink, opts v1.UpdateOptions) (*v1alpha1.RedisStreamSink, error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateSubresourceAction(redisstreamsinksResource, "status", c.ns, redisStreamSink), &v1alpha1.RedisStreamSink{})
 
@@ -115,7 +115,7 @@ func (c *FakeRedisStreamSinks) UpdateStatus(ctx context.Context, redisStreamSink
 }
 
 // Delete takes name of the redisStreamSink and deletes it. Returns an error if one occurs.
-func (c *FakeRedisStreamSinks) Delete(ctx context.Context, name string, options *v1.DeleteOptions) error {
+func (c *FakeRedisStreamSinks) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
 		Invokes(testing.NewDeleteAction(redisstreamsinksResource, c.ns, name), &v1alpha1.RedisStreamSink{})
 
@@ -123,15 +123,16 @@ func (c *FakeRedisStreamSinks) Delete(ctx context.Context, name string, options 
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakeRedisStreamSinks) DeleteCollection(ctx context.Context, options *v1.DeleteOptions, listOptions v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(redisstreamsinksResource, c.ns, listOptions)
+func (c *FakeRedisStreamSinks) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+	action := testing.NewDeleteCollectionAction(redisstreamsinksResource, c.ns, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.RedisStreamSinkList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched redisStreamSink.
-func (c *FakeRedisStreamSinks) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.RedisStreamSink, err error) {
+func (c *FakeRedisStreamSinks) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.RedisStreamSink, err 
+error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewPatchSubresourceAction(redisstreamsinksResource, c.ns, name, pt, data, subresources...), &v1alpha1.RedisStreamSink{})
 
