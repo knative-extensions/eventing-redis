@@ -24,8 +24,10 @@ import (
 
 	"go.uber.org/zap"
 
+	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	reconcilersource "knative.dev/eventing/pkg/reconciler/source"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	statefulsetinformer "knative.dev/pkg/client/injection/kube/informers/apps/v1/statefulset"
@@ -34,8 +36,6 @@ import (
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/resolver"
 	"knative.dev/pkg/system"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"knative.dev/eventing-redis/source/pkg/apis/sources/v1alpha1"
 	redisstreamsourceinformer "knative.dev/eventing-redis/source/pkg/client/injection/informers/sources/v1alpha1/redisstreamsource"
@@ -105,7 +105,7 @@ func NewController(
 	r.sinkResolver = resolver.NewURIResolver(ctx, impl.EnqueueKey)
 
 	// Get and Watch the Redis config map and dynamically update Redis configuration.
-	if _, err := kubeclient.Get(ctx).CoreV1().ConfigMaps(system.Namespace()).Get(ConfigMapName(), metav1.GetOptions{}); err == nil {
+	if cm, err := kubeclient.Get(ctx).CoreV1().ConfigMaps(system.Namespace()).Get(ConfigMapName(), metav1.GetOptions{}); err == nil {
 		cmw.Watch(ConfigMapName(), func(configMap *v1.ConfigMap) {
 			r.updateRedisConfig(ctx, configMap)
 		})
