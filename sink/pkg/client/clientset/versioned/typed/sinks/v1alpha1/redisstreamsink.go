@@ -138,7 +138,6 @@ func (c *redisStreamSinks) Update(ctx context.Context, redisStreamSink *v1alpha1
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-
 func (c *redisStreamSinks) UpdateStatus(ctx context.Context, redisStreamSink *v1alpha1.RedisStreamSink, opts v1.UpdateOptions) (result *v1alpha1.RedisStreamSink, err error) {
 	result = &v1alpha1.RedisStreamSink{}
 	err = c.client.Put().
