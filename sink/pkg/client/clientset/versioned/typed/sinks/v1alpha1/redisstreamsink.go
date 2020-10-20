@@ -181,8 +181,7 @@ func (c *redisStreamSinks) DeleteCollection(ctx context.Context, opts v1.DeleteO
 }
 
 // Patch applies the patch and returns the patched redisStreamSink.
-func (c *redisStreamSinks) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.RedisStreamSink, err error)
-{
+func (c *redisStreamSinks) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.RedisStreamSink, err error) {
 	result = &v1alpha1.RedisStreamSink{}
 	err = c.client.Patch(pt).
 		Namespace(c.ns).

@@ -131,8 +131,7 @@ func (c *FakeRedisStreamSinks) DeleteCollection(ctx context.Context, opts v1.Del
 }
 
 // Patch applies the patch and returns the patched redisStreamSink.
-func (c *FakeRedisStreamSinks) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.RedisStreamSink, err 
-error) {
+func (c *FakeRedisStreamSinks) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.RedisStreamSink, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewPatchSubresourceAction(redisstreamsinksResource, c.ns, name, pt, data, subresources...), &v1alpha1.RedisStreamSink{})
 

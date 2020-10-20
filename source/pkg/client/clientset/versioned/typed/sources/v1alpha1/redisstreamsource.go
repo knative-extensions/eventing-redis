@@ -180,8 +180,7 @@ func (c *redisStreamSources) DeleteCollection(ctx context.Context, opts v1.Delet
 }
 
 // Patch applies the patch and returns the patched redisStreamSource.
-func (c *redisStreamSources) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.RedisStreamSource, err 
-error) {
+func (c *redisStreamSources) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.RedisStreamSource, err error) {
 	result = &v1alpha1.RedisStreamSource{}
 	err = c.client.Patch(pt).
 		Namespace(c.ns).

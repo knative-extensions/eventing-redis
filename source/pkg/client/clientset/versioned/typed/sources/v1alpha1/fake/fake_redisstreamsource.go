@@ -131,8 +131,7 @@ func (c *FakeRedisStreamSources) DeleteCollection(ctx context.Context, opts v1.D
 }
 
 // Patch applies the patch and returns the patched redisStreamSource.
-func (c *FakeRedisStreamSources) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.RedisStreamSource, err 
-error) {
+func (c *FakeRedisStreamSources) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.RedisStreamSource, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewPatchSubresourceAction(redisstreamsourcesResource, c.ns, name, pt, data, subresources...), &v1alpha1.RedisStreamSource{})
 
