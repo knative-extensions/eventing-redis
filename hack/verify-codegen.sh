@@ -37,6 +37,8 @@ mkdir -p "${TMP_DIFFROOT}"
 
 cp -aR \
   "${REPO_ROOT_DIR}/go.sum" \
+  "${REPO_ROOT_DIR}/go.mod" \
+  "${REPO_ROOT_DIR}/source" \
   "${REPO_ROOT_DIR}/third_party" \
   "${REPO_ROOT_DIR}/vendor" \
   "${TMP_DIFFROOT}"
@@ -44,6 +46,15 @@ cp -aR \
 "${REPO_ROOT_DIR}/hack/update-codegen.sh"
 echo "Diffing ${REPO_ROOT_DIR} against freshly generated codegen"
 ret=0
+
+diff -Naupr --no-dereference \
+  "${REPO_ROOT_DIR}/go.sum" "${TMP_DIFFROOT}/go.sum" || ret=1
+
+diff -Naupr --no-dereference \
+  "${REPO_ROOT_DIR}/go.mod" "${TMP_DIFFROOT}/go.mod" || ret=1
+
+diff -Naupr --no-dereference \
+  "${REPO_ROOT_DIR}/source" "${TMP_DIFFROOT}/source" || ret=1
 
 diff -Naupr --no-dereference \
   "${REPO_ROOT_DIR}/third_party" "${TMP_DIFFROOT}/third_party" || ret=1
@@ -54,6 +65,7 @@ diff -Naupr --no-dereference \
 # Restore working tree state
 rm -fr \
   "${REPO_ROOT_DIR}/go.sum" \
+  "${REPO_ROOT_DIR}/pkg" \
   "${REPO_ROOT_DIR}/third_party" \
   "${REPO_ROOT_DIR}/vendor"
 
