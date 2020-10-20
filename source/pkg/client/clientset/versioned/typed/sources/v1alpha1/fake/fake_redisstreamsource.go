@@ -19,6 +19,8 @@ limitations under the License.
 package fake
 
 import (
+	"context"
+
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -39,7 +41,7 @@ var redisstreamsourcesResource = schema.GroupVersionResource{Group: "sources.kna
 var redisstreamsourcesKind = schema.GroupVersionKind{Group: "sources.knative.dev", Version: "v1alpha1", Kind: "RedisStreamSource"}
 
 // Get takes name of the redisStreamSource, and returns the corresponding redisStreamSource object, and an error if there is any.
-func (c *FakeRedisStreamSources) Get(name string, options v1.GetOptions) (result *v1alpha1.RedisStreamSource, err error) {
+func (c *FakeRedisStreamSources) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.RedisStreamSource, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewGetAction(redisstreamsourcesResource, c.ns, name), &v1alpha1.RedisStreamSource{})
 
@@ -50,7 +52,7 @@ func (c *FakeRedisStreamSources) Get(name string, options v1.GetOptions) (result
 }
 
 // List takes label and field selectors, and returns the list of RedisStreamSources that match those selectors.
-func (c *FakeRedisStreamSources) List(opts v1.ListOptions) (result *v1alpha1.RedisStreamSourceList, err error) {
+func (c *FakeRedisStreamSources) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.RedisStreamSourceList, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewListAction(redisstreamsourcesResource, redisstreamsourcesKind, c.ns, opts), &v1alpha1.RedisStreamSourceList{})
 
@@ -72,14 +74,14 @@ func (c *FakeRedisStreamSources) List(opts v1.ListOptions) (result *v1alpha1.Red
 }
 
 // Watch returns a watch.Interface that watches the requested redisStreamSources.
-func (c *FakeRedisStreamSources) Watch(opts v1.ListOptions) (watch.Interface, error) {
+func (c *FakeRedisStreamSources) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewWatchAction(redisstreamsourcesResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a redisStreamSource and creates it.  Returns the server's representation of the redisStreamSource, and an error, if there is any.
-func (c *FakeRedisStreamSources) Create(redisStreamSource *v1alpha1.RedisStreamSource) (result *v1alpha1.RedisStreamSource, err error) {
+func (c *FakeRedisStreamSources) Create(ctx context.Context, redisStreamSource *v1alpha1.RedisStreamSource) (result *v1alpha1.RedisStreamSource, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewCreateAction(redisstreamsourcesResource, c.ns, redisStreamSource), &v1alpha1.RedisStreamSource{})
 
@@ -90,7 +92,7 @@ func (c *FakeRedisStreamSources) Create(redisStreamSource *v1alpha1.RedisStreamS
 }
 
 // Update takes the representation of a redisStreamSource and updates it. Returns the server's representation of the redisStreamSource, and an error, if there is any.
-func (c *FakeRedisStreamSources) Update(redisStreamSource *v1alpha1.RedisStreamSource) (result *v1alpha1.RedisStreamSource, err error) {
+func (c *FakeRedisStreamSources) Update(ctx context.Context, redisStreamSource *v1alpha1.RedisStreamSource) (result *v1alpha1.RedisStreamSource, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateAction(redisstreamsourcesResource, c.ns, redisStreamSource), &v1alpha1.RedisStreamSource{})
 
@@ -102,7 +104,7 @@ func (c *FakeRedisStreamSources) Update(redisStreamSource *v1alpha1.RedisStreamS
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeRedisStreamSources) UpdateStatus(redisStreamSource *v1alpha1.RedisStreamSource) (*v1alpha1.RedisStreamSource, error) {
+func (c *FakeRedisStreamSources) UpdateStatus(ctx context.Context, redisStreamSource *v1alpha1.RedisStreamSource) (*v1alpha1.RedisStreamSource, error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateSubresourceAction(redisstreamsourcesResource, "status", c.ns, redisStreamSource), &v1alpha1.RedisStreamSource{})
 
@@ -113,7 +115,7 @@ func (c *FakeRedisStreamSources) UpdateStatus(redisStreamSource *v1alpha1.RedisS
 }
 
 // Delete takes name of the redisStreamSource and deletes it. Returns an error if one occurs.
-func (c *FakeRedisStreamSources) Delete(name string, options *v1.DeleteOptions) error {
+func (c *FakeRedisStreamSources) Delete(ctx context.Context, name string, options *v1.DeleteOptions) error {
 	_, err := c.Fake.
 		Invokes(testing.NewDeleteAction(redisstreamsourcesResource, c.ns, name), &v1alpha1.RedisStreamSource{})
 
@@ -121,7 +123,7 @@ func (c *FakeRedisStreamSources) Delete(name string, options *v1.DeleteOptions) 
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakeRedisStreamSources) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
+func (c *FakeRedisStreamSources) DeleteCollection(ctx context.Context, options *v1.DeleteOptions, listOptions v1.ListOptions) error {
 	action := testing.NewDeleteCollectionAction(redisstreamsourcesResource, c.ns, listOptions)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.RedisStreamSourceList{})
@@ -129,7 +131,7 @@ func (c *FakeRedisStreamSources) DeleteCollection(options *v1.DeleteOptions, lis
 }
 
 // Patch applies the patch and returns the patched redisStreamSource.
-func (c *FakeRedisStreamSources) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.RedisStreamSource, err error) {
+func (c *FakeRedisStreamSources) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.RedisStreamSource, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewPatchSubresourceAction(redisstreamsourcesResource, c.ns, name, pt, data, subresources...), &v1alpha1.RedisStreamSource{})
 

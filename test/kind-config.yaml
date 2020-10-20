@@ -1,0 +1,11 @@
+apiVersion: kind.x-k8s.io/v1alpha4
+kind: Cluster
+nodes:
+  - role: control-plane
+    extraPortMappings:
+    # gateway nodeport
+    - containerPort: 31080
+      hostPort: 80
+    # secured gateway nodeport
+    - containerPort: 31443
+      hostPort: 443
