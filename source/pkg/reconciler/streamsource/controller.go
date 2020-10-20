@@ -24,7 +24,6 @@ import (
 
 	"go.uber.org/zap"
 
-	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -50,6 +49,8 @@ type envConfig struct {
 	Image string `envconfig:"STREAMSOURCE_RA_IMAGE" required:"true"`
 }
 
+/*
+//Removing watch on Redis config and not reloading numConsumers from CM dynamically since we don't automatically rollout new adapters on watch change. Will scale adapters via replicas
 func WithRedis(cw *reconcilersource.ConfigWatcher, cmw configmap.Watcher) {
 	cmName := ConfigMapName()
 	obs := updateFromRedisConfigMap
@@ -75,7 +76,7 @@ func updateFromRedisConfigMap(cfg *corev1.ConfigMap) {
 	if err != nil {
 		return
 	}
-}
+} */
 
 // NewController initializes the controller and is called by the generated code
 // Registers event handlers to enqueue events
@@ -96,7 +97,7 @@ func NewController(
 		ssr:                 &reconciler.StatefulSetReconciler{KubeClientSet: kubeclient.Get(ctx)},
 		rbr:                 &reconciler.RoleBindingReconciler{KubeClientSet: kubeclient.Get(ctx)},
 		sar:                 &reconciler.ServiceAccountReconciler{KubeClientSet: kubeclient.Get(ctx)},
-		configs:             reconcilersource.WatchConfigurations(ctx, component, cmw, WithRedis),
+		configs:             reconcilersource.WatchConfigurations(ctx, component, cmw),
 		receiveAdapterImage: env.Image,
 	}
 
@@ -104,8 +105,8 @@ func NewController(
 
 	r.sinkResolver = resolver.NewURIResolver(ctx, impl.EnqueueKey)
 
-	// Get and Watch the Redis config map and dynamically update Redis configuration.
-	if cm, err := kubeclient.Get(ctx).CoreV1().ConfigMaps(system.Namespace()).Get(ConfigMapName(), metav1.GetOptions{}); err == nil {
+	// Get Redis config map and set Redis configuration, to pass data to receive adapter
+	if _, err := kubeclient.Get(ctx).CoreV1().ConfigMaps(system.Namespace()).Get(ctx, ConfigMapName(), metav1.GetOptions{}); err == nil {
 		cmw.Watch(ConfigMapName(), func(configMap *v1.ConfigMap) {
 			r.updateRedisConfig(ctx, configMap)
 		})

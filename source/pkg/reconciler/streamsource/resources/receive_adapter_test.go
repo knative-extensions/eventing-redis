@@ -41,7 +41,7 @@ func TestMakeReceiveAdapter(t *testing.T) {
 		},
 	}
 
-	got := MakeReceiveAdapter(src, "test-image", "sink-uri")
+	got := MakeReceiveAdapter(src, "test-image", "sink-uri", "5")
 
 	one := int32(1)
 	labels := Labels(src.Name)
@@ -79,6 +79,9 @@ func TestMakeReceiveAdapter(t *testing.T) {
 								}, {
 									Name:  "K_SINK",
 									Value: "sink-uri",
+								}, {
+									Name:  "NUM_CONSUMERS",
+									Value: "5",
 								}, {
 									Name: "NAMESPACE",
 									ValueFrom: &corev1.EnvVarSource{
