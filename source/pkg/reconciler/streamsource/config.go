@@ -24,15 +24,15 @@ import (
 )
 
 const (
-	configMapNameEnv   = "CONFIG_REDIS_NUMCONSUMERS"
-	redisConfigKey     = "numConsumers"
+	configMapNameEnv    = "CONFIG_REDIS_NUMCONSUMERS"
+	redisConfigKey      = "numConsumers"
 	DefaultNumConsumers = "10"
 )
 
 // RedisConfig contains the configuration defined in the redis ConfigMap.
 // +k8s:deepcopy-gen=true
 type RedisConfig struct {
-	NumConsumers    string
+	NumConsumers string
 }
 
 func defaultConfig() *RedisConfig {
@@ -55,7 +55,7 @@ func ConfigMapName() string {
 func NewConfigFromMap(data map[string]string) (*RedisConfig, error) {
 	rc := defaultConfig()
 	if numC, ok := data[redisConfigKey]; ok {
-		rc.NumConsumers  = numC
+		rc.NumConsumers = numC
 	}
 	return rc, nil
 }
@@ -73,7 +73,7 @@ func GetRedisConfig(configMap map[string]string) (*RedisConfig, error) {
 	}
 
 	config := &RedisConfig{
-		NumConsumers:  DefaultNumConsumers,
+		NumConsumers: DefaultNumConsumers,
 	}
 
 	err := configmap.Parse(configMap,

@@ -73,7 +73,7 @@ func MakeReceiveAdapter(source *sourcesv1alpha1.RedisStreamSource, image string,
 							}, {
 								Name:  "NUM_CONSUMERS",
 								Value: numConsumers,
-							},{
+							}, {
 								Name: "NAMESPACE",
 								ValueFrom: &corev1.EnvVarSource{
 									FieldRef: &corev1.ObjectFieldSelector{

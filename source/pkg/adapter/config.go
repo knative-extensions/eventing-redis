@@ -22,8 +22,8 @@ import (
 type Config struct {
 	adapter.EnvConfig
 
-	Address         string `envconfig:"ADDRESS" required:"true"`
-	Stream          string `envconfig:"STREAM" required:"true"`
-	PodName         string `envconfig:"NAME" required:"true"`
-	NumConsumers    string `envconfig:"NUM_CONSUMERS" required:"true"`
+	Address      string `envconfig:"ADDRESS" required:"true"`
+	Stream       string `envconfig:"STREAM" required:"true"`
+	PodName      string `envconfig:"NAME" required:"true"`
+	NumConsumers string `envconfig:"NUM_CONSUMERS" required:"true"`
 }

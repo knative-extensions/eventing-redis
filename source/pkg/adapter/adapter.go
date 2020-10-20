@@ -20,10 +20,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
-	"strconv"
 
 	scan "knative.dev/eventing-redis/source/pkg/redis"
 

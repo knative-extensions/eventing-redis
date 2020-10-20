@@ -25,9 +25,9 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
+	"knative.dev/pkg/logging"
 	pkgreconciler "knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
-	"knative.dev/pkg/logging"
 
 	eventingresources "knative.dev/eventing/pkg/reconciler/resources"
 	reconcilersource "knative.dev/eventing/pkg/reconciler/source"
@@ -62,7 +62,7 @@ type Reconciler struct {
 	ceSource            string
 	sinkResolver        *resolver.URIResolver
 	configs             reconcilersource.ConfigAccessor
-	numConsumers		string
+	numConsumers        string
 }
 
 // Check that our Reconciler implements ReconcileKind.
