@@ -18,10 +18,6 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-<<<<<<< HEAD
-source $(dirname "$0")/../vendor/knative.dev/test-infra/scripts/library.sh
-=======
 source $(dirname $0)/../vendor/knative.dev/test-infra/scripts/library.sh
->>>>>>> origin/master
 
 go_update_deps "$@"
