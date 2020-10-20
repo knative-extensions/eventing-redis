@@ -160,11 +160,10 @@ github.com/google/gofuzz
 github.com/google/uuid
 # github.com/googleapis/gax-go/v2 v2.0.5
 github.com/googleapis/gax-go/v2
-# github.com/googleapis/gnostic v0.4.1
+# github.com/googleapis/gnostic v0.4.0
 github.com/googleapis/gnostic/OpenAPIv2
 github.com/googleapis/gnostic/compiler
 github.com/googleapis/gnostic/extensions
-github.com/googleapis/gnostic/openapiv2
 # github.com/grpc-ecosystem/grpc-gateway v1.14.8
 github.com/grpc-ecosystem/grpc-gateway/internal
 github.com/grpc-ecosystem/grpc-gateway/runtime
@@ -909,8 +908,7 @@ k8s.io/klog
 # k8s.io/klog/v2 v2.3.0
 ## explicit
 k8s.io/klog/v2
-# k8s.io/kube-openapi v0.0.0-20200923155610-8b5066479488
-## explicit
+# k8s.io/kube-openapi v0.0.0-20200410145947-bcb3869e6f29
 k8s.io/kube-openapi/cmd/openapi-gen/args
 k8s.io/kube-openapi/pkg/common
 k8s.io/kube-openapi/pkg/generators

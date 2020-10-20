@@ -30,7 +30,7 @@ import (
 	"k8s.io/gengo/types"
 	openapi "k8s.io/kube-openapi/pkg/common"
 
-	"k8s.io/klog/v2"
+	"k8s.io/klog"
 )
 
 // This is the comment tag that carries parameters for open API generation.
@@ -282,9 +282,6 @@ func typeShortName(t *types.Type) string {
 
 func (g openAPITypeWriter) generateMembers(t *types.Type, required []string) ([]string, error) {
 	var err error
-	for t.Kind == types.Pointer { // fast-forward to effective type containing members
-		t = t.Elem
-	}
 	for _, m := range t.Members {
 		if hasOpenAPITagValue(m.CommentLines, tagValueFalse) {
 			continue
@@ -537,7 +534,7 @@ func (g openAPITypeWriter) generateDescription(CommentLines []string) {
 		default:
 			if strings.HasPrefix(line, " ") || strings.HasPrefix(line, "\t") {
 				delPrevChar()
-				line = "\n" + line + "\n" // Replace it with newline. This is useful when we have a line with: "Example:\n\tJSON-something..."
+				line = "\n" + line + "\n" // Replace it with newline. This is useful when we have a line with: "Example:\n\tJSON-someting..."
 			} else {
 				line += " "
 			}

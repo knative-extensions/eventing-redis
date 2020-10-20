@@ -21,7 +21,6 @@ require (
 	k8s.io/code-generator v0.19.3 // indirect
 	k8s.io/gengo v0.0.0-20200728071708-7794989d0000 // indirect
 	k8s.io/klog/v2 v2.3.0 // indirect
-	k8s.io/kube-openapi v0.0.0-20200923155610-8b5066479488 // indirect
 	knative.dev/eventing v0.18.1-0.20201001144430-5646fe1b227d
 	knative.dev/pkg v0.0.0-20201012163217-54ad6c6d39a7
 	knative.dev/serving v0.18.0
