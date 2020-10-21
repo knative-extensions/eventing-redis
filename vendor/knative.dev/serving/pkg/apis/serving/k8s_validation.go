@@ -28,10 +28,10 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/validation"
-	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/pkg/apis"
 	"knative.dev/pkg/profiling"
 	"knative.dev/serving/pkg/apis/config"
+	"knative.dev/serving/pkg/networking"
 )
 
 const (
@@ -709,7 +709,7 @@ func WithinUserContainer(ctx context.Context) context.Context {
 // being validated.
 type sidecarContainer struct{}
 
-// WithinSidecatrContainer notes on the context that further validation or defaulting
+// WithinSidecarContainer notes on the context that further validation or defaulting
 // is within the context of a sidecar container in the revision.
 func WithinSidecarContainer(ctx context.Context) context.Context {
 	return context.WithValue(ctx, sidecarContainer{}, struct{}{})
