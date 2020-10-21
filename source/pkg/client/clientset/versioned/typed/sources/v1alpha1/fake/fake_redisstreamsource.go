@@ -81,7 +81,7 @@ func (c *FakeRedisStreamSources) Watch(ctx context.Context, opts v1.ListOptions)
 }
 
 // Create takes the representation of a redisStreamSource and creates it.  Returns the server's representation of the redisStreamSource, and an error, if there is any.
-func (c *FakeRedisStreamSources) Create(ctx context.Context, redisStreamSource *v1alpha1.RedisStreamSource) (result *v1alpha1.RedisStreamSource, err error) {
+func (c *FakeRedisStreamSources) Create(ctx context.Context, redisStreamSource *v1alpha1.RedisStreamSource, opts v1.CreateOptions) (result *v1alpha1.RedisStreamSource, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewCreateAction(redisstreamsourcesResource, c.ns, redisStreamSource), &v1alpha1.RedisStreamSource{})
 
@@ -92,7 +92,7 @@ func (c *FakeRedisStreamSources) Create(ctx context.Context, redisStreamSource *
 }
 
 // Update takes the representation of a redisStreamSource and updates it. Returns the server's representation of the redisStreamSource, and an error, if there is any.
-func (c *FakeRedisStreamSources) Update(ctx context.Context, redisStreamSource *v1alpha1.RedisStreamSource) (result *v1alpha1.RedisStreamSource, err error) {
+func (c *FakeRedisStreamSources) Update(ctx context.Context, redisStreamSource *v1alpha1.RedisStreamSource, opts v1.UpdateOptions) (result *v1alpha1.RedisStreamSource, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateAction(redisstreamsourcesResource, c.ns, redisStreamSource), &v1alpha1.RedisStreamSource{})
 
@@ -104,7 +104,7 @@ func (c *FakeRedisStreamSources) Update(ctx context.Context, redisStreamSource *
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeRedisStreamSources) UpdateStatus(ctx context.Context, redisStreamSource *v1alpha1.RedisStreamSource) (*v1alpha1.RedisStreamSource, error) {
+func (c *FakeRedisStreamSources) UpdateStatus(ctx context.Context, redisStreamSource *v1alpha1.RedisStreamSource, opts v1.UpdateOptions) (*v1alpha1.RedisStreamSource, error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateSubresourceAction(redisstreamsourcesResource, "status", c.ns, redisStreamSource), &v1alpha1.RedisStreamSource{})
 
@@ -115,7 +115,7 @@ func (c *FakeRedisStreamSources) UpdateStatus(ctx context.Context, redisStreamSo
 }
 
 // Delete takes name of the redisStreamSource and deletes it. Returns an error if one occurs.
-func (c *FakeRedisStreamSources) Delete(ctx context.Context, name string, options *v1.DeleteOptions) error {
+func (c *FakeRedisStreamSources) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
 		Invokes(testing.NewDeleteAction(redisstreamsourcesResource, c.ns, name), &v1alpha1.RedisStreamSource{})
 
@@ -123,15 +123,15 @@ func (c *FakeRedisStreamSources) Delete(ctx context.Context, name string, option
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakeRedisStreamSources) DeleteCollection(ctx context.Context, options *v1.DeleteOptions, listOptions v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(redisstreamsourcesResource, c.ns, listOptions)
+func (c *FakeRedisStreamSources) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+	action := testing.NewDeleteCollectionAction(redisstreamsourcesResource, c.ns, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.RedisStreamSourceList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched redisStreamSource.
-func (c *FakeRedisStreamSources) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.RedisStreamSource, err error) {
+func (c *FakeRedisStreamSources) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.RedisStreamSource, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewPatchSubresourceAction(redisstreamsourcesResource, c.ns, name, pt, data, subresources...), &v1alpha1.RedisStreamSource{})
 

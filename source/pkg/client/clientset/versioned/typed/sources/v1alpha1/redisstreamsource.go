@@ -38,15 +38,15 @@ type RedisStreamSourcesGetter interface {
 
 // RedisStreamSourceInterface has methods to work with RedisStreamSource resources.
 type RedisStreamSourceInterface interface {
-	Create(ctx context.Context, redisStreamSource *v1alpha1.RedisStreamSource) (*v1alpha1.RedisStreamSource, error)
-	Update(ctx context.Context, redisStreamSource *v1alpha1.RedisStreamSource) (*v1alpha1.RedisStreamSource, error)
-	UpdateStatus(ctx context.Context, redisStreamSource *v1alpha1.RedisStreamSource) (*v1alpha1.RedisStreamSource, error)
-	Delete(ctx context.Context, name string, options *v1.DeleteOptions) error
-	DeleteCollection(ctx context.Context, options *v1.DeleteOptions, listOptions v1.ListOptions) error
-	Get(ctx context.Context, name string, options v1.GetOptions) (*v1alpha1.RedisStreamSource, error)
+	Create(ctx context.Context, redisStreamSource *v1alpha1.RedisStreamSource, opts v1.CreateOptions) (*v1alpha1.RedisStreamSource, error)
+	Update(ctx context.Context, redisStreamSource *v1alpha1.RedisStreamSource, opts v1.UpdateOptions) (*v1alpha1.RedisStreamSource, error)
+	UpdateStatus(ctx context.Context, redisStreamSource *v1alpha1.RedisStreamSource, opts v1.UpdateOptions) (*v1alpha1.RedisStreamSource, error)
+	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
+	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.RedisStreamSource, error)
 	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.RedisStreamSourceList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.RedisStreamSource, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.RedisStreamSource, err error)
 	RedisStreamSourceExpansion
 }
 
@@ -110,11 +110,12 @@ func (c *redisStreamSources) Watch(ctx context.Context, opts v1.ListOptions) (wa
 }
 
 // Create takes the representation of a redisStreamSource and creates it.  Returns the server's representation of the redisStreamSource, and an error, if there is any.
-func (c *redisStreamSources) Create(ctx context.Context, redisStreamSource *v1alpha1.RedisStreamSource) (result *v1alpha1.RedisStreamSource, err error) {
+func (c *redisStreamSources) Create(ctx context.Context, redisStreamSource *v1alpha1.RedisStreamSource, opts v1.CreateOptions) (result *v1alpha1.RedisStreamSource, err error) {
 	result = &v1alpha1.RedisStreamSource{}
 	err = c.client.Post().
 		Namespace(c.ns).
 		Resource("redisstreamsources").
+		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(redisStreamSource).
 		Do(ctx).
 		Into(result)
@@ -122,12 +123,13 @@ func (c *redisStreamSources) Create(ctx context.Context, redisStreamSource *v1al
 }
 
 // Update takes the representation of a redisStreamSource and updates it. Returns the server's representation of the redisStreamSource, and an error, if there is any.
-func (c *redisStreamSources) Update(ctx context.Context, redisStreamSource *v1alpha1.RedisStreamSource) (result *v1alpha1.RedisStreamSource, err error) {
+func (c *redisStreamSources) Update(ctx context.Context, redisStreamSource *v1alpha1.RedisStreamSource, opts v1.UpdateOptions) (result *v1alpha1.RedisStreamSource, err error) {
 	result = &v1alpha1.RedisStreamSource{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("redisstreamsources").
 		Name(redisStreamSource.Name).
+		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(redisStreamSource).
 		Do(ctx).
 		Into(result)
@@ -136,14 +138,14 @@ func (c *redisStreamSources) Update(ctx context.Context, redisStreamSource *v1al
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-
-func (c *redisStreamSources) UpdateStatus(ctx context.Context, redisStreamSource *v1alpha1.RedisStreamSource) (result *v1alpha1.RedisStreamSource, err error) {
+func (c *redisStreamSources) UpdateStatus(ctx context.Context, redisStreamSource *v1alpha1.RedisStreamSource, opts v1.UpdateOptions) (result *v1alpha1.RedisStreamSource, err error) {
 	result = &v1alpha1.RedisStreamSource{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("redisstreamsources").
 		Name(redisStreamSource.Name).
 		SubResource("status").
+		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(redisStreamSource).
 		Do(ctx).
 		Into(result)
@@ -151,40 +153,41 @@ func (c *redisStreamSources) UpdateStatus(ctx context.Context, redisStreamSource
 }
 
 // Delete takes name of the redisStreamSource and deletes it. Returns an error if one occurs.
-func (c *redisStreamSources) Delete(ctx context.Context, name string, options *v1.DeleteOptions) error {
+func (c *redisStreamSources) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("redisstreamsources").
 		Name(name).
-		Body(options).
+		Body(&opts).
 		Do(ctx).
 		Error()
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *redisStreamSources) DeleteCollection(ctx context.Context, options *v1.DeleteOptions, listOptions v1.ListOptions) error {
+func (c *redisStreamSources) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
 	var timeout time.Duration
-	if listOptions.TimeoutSeconds != nil {
-		timeout = time.Duration(*listOptions.TimeoutSeconds) * time.Second
+	if listOpts.TimeoutSeconds != nil {
+		timeout = time.Duration(*listOpts.TimeoutSeconds) * time.Second
 	}
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("redisstreamsources").
-		VersionedParams(&listOptions, scheme.ParameterCodec).
+		VersionedParams(&listOpts, scheme.ParameterCodec).
 		Timeout(timeout).
-		Body(options).
+		Body(&opts).
 		Do(ctx).
 		Error()
 }
 
 // Patch applies the patch and returns the patched redisStreamSource.
-func (c *redisStreamSources) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.RedisStreamSource, err error) {
+func (c *redisStreamSources) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.RedisStreamSource, err error) {
 	result = &v1alpha1.RedisStreamSource{}
 	err = c.client.Patch(pt).
 		Namespace(c.ns).
 		Resource("redisstreamsources").
-		SubResource(subresources...).
 		Name(name).
+		SubResource(subresources...).
+		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(data).
 		Do(ctx).
 		Into(result)

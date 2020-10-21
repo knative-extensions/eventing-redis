@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2018 The Knative Authors
+# Copyright 2020 The Knative Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -33,7 +33,6 @@ CODEGEN_PKG=${CODEGEN_PKG:-$(cd ${REPO_ROOT_DIR}; ls -d -1 $(dirname $0)/../vend
 KNATIVE_CODEGEN_PKG=${KNATIVE_CODEGEN_PKG:-$(cd ${REPO_ROOT_DIR}; ls -d -1 $(dirname $0)/../vendor/knative.dev/pkg 2>/dev/null || echo ../pkg)}
 
 chmod +x ${CODEGEN_PKG}/generate-groups.sh
-
 # generate the code with:
 # --output-base    because this script should also be able to run inside the vendor dir of
 #                  k8s.io/kubernetes. The output-base is needed for the generators to output into the vendor dir
@@ -48,17 +47,8 @@ ${CODEGEN_PKG}/generate-groups.sh "deepcopy,client,informer,lister" \
   "sinks:v1alpha1" \
   --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate.go.txt
 
-# Depends on generate-groups.sh to install bin/deepcopy-gen
-go run k8s.io/code-generator/cmd/deepcopy-gen  --input-dirs \
-  $(echo \
-  knative.dev/eventing-redis/pkg/apis/v1alpha1 \
-  | sed "s/ /,/g") \
-  -O zz_generated.deepcopy \
-  --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate.go.txt
-
 # Knative Injection
 chmod +x ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh
-
 ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
   knative.dev/eventing-redis/source/pkg/client knative.dev/eventing-redis/source/pkg/apis \
   "sources:v1alpha1" \
@@ -68,7 +58,6 @@ ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
   knative.dev/eventing-redis/sink/pkg/client knative.dev/eventing-redis/sink/pkg/apis \
   "sinks:v1alpha1" \
   --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate.go.txt
-
 
 # Make sure our dependencies are up-to-date
 ${REPO_ROOT_DIR}/hack/update-deps.sh

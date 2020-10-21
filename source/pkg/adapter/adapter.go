@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -53,6 +54,7 @@ type Adapter struct {
 
 func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClient cloudevents.Client) adapter.Adapter {
 	config := processed.(*Config)
+
 	return &Adapter{
 		config: config,
 		logger: logging.FromContext(ctx).Desugar().With(zap.String("stream", config.Stream)),
@@ -106,9 +108,14 @@ func (a *Adapter) Start(ctx context.Context) error {
 
 	}
 
-	a.logger.Info("Number of consumers from config:", zap.Int("NumConsumers", a.config.NumConsumers))
+	numConsumers, err := strconv.Atoi(a.config.NumConsumers)
+	if err != nil {
+		a.logger.Error("Cannot convert numConsumers to int", zap.Error(err))
+		return err
+	}
+	a.logger.Info("Number of consumers from config:", zap.Int("NumConsumers", numConsumers))
 
-	for i := 0; i < a.config.NumConsumers; i++ {
+	for i := 0; i < numConsumers; i++ {
 		waitGroup.Add(1)
 
 		go func(wg *sync.WaitGroup, j int) {

@@ -15,7 +15,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: config-leader-election-github
+  name: config-leader-election-redis
   namespace: knative-sources
   labels:
     contrib.eventing.knative.dev/release: devel

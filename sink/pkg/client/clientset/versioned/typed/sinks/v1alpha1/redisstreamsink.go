@@ -38,15 +38,15 @@ type RedisStreamSinksGetter interface {
 
 // RedisStreamSinkInterface has methods to work with RedisStreamSink resources.
 type RedisStreamSinkInterface interface {
-	Create(ctx context.Context, redisStreamSink *v1alpha1.RedisStreamSink) (*v1alpha1.RedisStreamSink, error)
-	Update(ctx context.Context, redisStreamSink *v1alpha1.RedisStreamSink) (*v1alpha1.RedisStreamSink, error)
-	UpdateStatus(ctx context.Context, redisStreamSink *v1alpha1.RedisStreamSink) (*v1alpha1.RedisStreamSink, error)
-	Delete(ctx context.Context, name string, options *v1.DeleteOptions) error
-	DeleteCollection(ctx context.Context, options *v1.DeleteOptions, listOptions v1.ListOptions) error
-	Get(ctx context.Context, name string, options v1.GetOptions) (*v1alpha1.RedisStreamSink, error)
+	Create(ctx context.Context, redisStreamSink *v1alpha1.RedisStreamSink, opts v1.CreateOptions) (*v1alpha1.RedisStreamSink, error)
+	Update(ctx context.Context, redisStreamSink *v1alpha1.RedisStreamSink, opts v1.UpdateOptions) (*v1alpha1.RedisStreamSink, error)
+	UpdateStatus(ctx context.Context, redisStreamSink *v1alpha1.RedisStreamSink, opts v1.UpdateOptions) (*v1alpha1.RedisStreamSink, error)
+	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
+	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.RedisStreamSink, error)
 	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.RedisStreamSinkList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.RedisStreamSink, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.RedisStreamSink, err error)
 	RedisStreamSinkExpansion
 }
 
@@ -110,11 +110,12 @@ func (c *redisStreamSinks) Watch(ctx context.Context, opts v1.ListOptions) (watc
 }
 
 // Create takes the representation of a redisStreamSink and creates it.  Returns the server's representation of the redisStreamSink, and an error, if there is any.
-func (c *redisStreamSinks) Create(ctx context.Context, redisStreamSink *v1alpha1.RedisStreamSink) (result *v1alpha1.RedisStreamSink, err error) {
+func (c *redisStreamSinks) Create(ctx context.Context, redisStreamSink *v1alpha1.RedisStreamSink, opts v1.CreateOptions) (result *v1alpha1.RedisStreamSink, err error) {
 	result = &v1alpha1.RedisStreamSink{}
 	err = c.client.Post().
 		Namespace(c.ns).
 		Resource("redisstreamsinks").
+		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(redisStreamSink).
 		Do(ctx).
 		Into(result)
@@ -122,12 +123,13 @@ func (c *redisStreamSinks) Create(ctx context.Context, redisStreamSink *v1alpha1
 }
 
 // Update takes the representation of a redisStreamSink and updates it. Returns the server's representation of the redisStreamSink, and an error, if there is any.
-func (c *redisStreamSinks) Update(ctx context.Context, redisStreamSink *v1alpha1.RedisStreamSink) (result *v1alpha1.RedisStreamSink, err error) {
+func (c *redisStreamSinks) Update(ctx context.Context, redisStreamSink *v1alpha1.RedisStreamSink, opts v1.UpdateOptions) (result *v1alpha1.RedisStreamSink, err error) {
 	result = &v1alpha1.RedisStreamSink{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("redisstreamsinks").
 		Name(redisStreamSink.Name).
+		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(redisStreamSink).
 		Do(ctx).
 		Into(result)
@@ -136,14 +138,14 @@ func (c *redisStreamSinks) Update(ctx context.Context, redisStreamSink *v1alpha1
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-
-func (c *redisStreamSinks) UpdateStatus(ctx context.Context, redisStreamSink *v1alpha1.RedisStreamSink) (result *v1alpha1.RedisStreamSink, err error) {
+func (c *redisStreamSinks) UpdateStatus(ctx context.Context, redisStreamSink *v1alpha1.RedisStreamSink, opts v1.UpdateOptions) (result *v1alpha1.RedisStreamSink, err error) {
 	result = &v1alpha1.RedisStreamSink{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("redisstreamsinks").
 		Name(redisStreamSink.Name).
 		SubResource("status").
+		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(redisStreamSink).
 		Do(ctx).
 		Into(result)
@@ -151,40 +153,41 @@ func (c *redisStreamSinks) UpdateStatus(ctx context.Context, redisStreamSink *v1
 }
 
 // Delete takes name of the redisStreamSink and deletes it. Returns an error if one occurs.
-func (c *redisStreamSinks) Delete(ctx context.Context, name string, options *v1.DeleteOptions) error {
+func (c *redisStreamSinks) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("redisstreamsinks").
 		Name(name).
-		Body(options).
+		Body(&opts).
 		Do(ctx).
 		Error()
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *redisStreamSinks) DeleteCollection(ctx context.Context, options *v1.DeleteOptions, listOptions v1.ListOptions) error {
+func (c *redisStreamSinks) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
 	var timeout time.Duration
-	if listOptions.TimeoutSeconds != nil {
-		timeout = time.Duration(*listOptions.TimeoutSeconds) * time.Second
+	if listOpts.TimeoutSeconds != nil {
+		timeout = time.Duration(*listOpts.TimeoutSeconds) * time.Second
 	}
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("redisstreamsinks").
-		VersionedParams(&listOptions, scheme.ParameterCodec).
+		VersionedParams(&listOpts, scheme.ParameterCodec).
 		Timeout(timeout).
-		Body(options).
+		Body(&opts).
 		Do(ctx).
 		Error()
 }
 
 // Patch applies the patch and returns the patched redisStreamSink.
-func (c *redisStreamSinks) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.RedisStreamSink, err error) {
+func (c *redisStreamSinks) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.RedisStreamSink, err error) {
 	result = &v1alpha1.RedisStreamSink{}
 	err = c.client.Patch(pt).
 		Namespace(c.ns).
 		Resource("redisstreamsinks").
-		SubResource(subresources...).
 		Name(name).
+		SubResource(subresources...).
+		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(data).
 		Do(ctx).
 		Into(result)

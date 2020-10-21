@@ -20,9 +20,12 @@ import (
 	"context"
 	"encoding/json"
 
+	"go.uber.org/zap"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
+	"knative.dev/pkg/logging"
 	pkgreconciler "knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 
@@ -38,7 +41,6 @@ import (
 const (
 	component              = "redisstreamsource"
 	adapterClusterRoleName = "knative-sources-redisstream-adapter"
-	defaultFinalizerName   = "redisstreamsources.sources.knative.dev"
 )
 
 func newFinalizedNormal(namespace, name string) pkgreconciler.Event {
@@ -60,11 +62,11 @@ type Reconciler struct {
 	ceSource            string
 	sinkResolver        *resolver.URIResolver
 	configs             reconcilersource.ConfigAccessor
+	numConsumers        string
 }
 
 // Check that our Reconciler implements ReconcileKind.
 var _ streamsourcereconciler.Interface = (*Reconciler)(nil)
-var _ streamsourcereconciler.Finalizer = (*Reconciler)(nil)
 
 // Check that our Reconciler implements FinalizeKind.
 var _ streamsourcereconciler.Finalizer = (*Reconciler)(nil)
@@ -100,7 +102,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.
 		return event
 	}
 
-	expectedStatefulSet := resources.MakeReceiveAdapter(source, r.receiveAdapterImage, sinkURI.String())
+	expectedStatefulSet := resources.MakeReceiveAdapter(source, r.receiveAdapterImage, sinkURI.String(), r.numConsumers)
 	ra, event := r.ssr.ReconcileStatefulSet(ctx, source, expectedStatefulSet)
 	if ra == nil {
 		if source.Status.Annotations == nil {
@@ -117,4 +119,14 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.
 func (r *Reconciler) FinalizeKind(ctx context.Context, source *sourcesv1alpha1.RedisStreamSource) pkgreconciler.Event {
 	//Nothing to do since adapter will gracefully shutdown the consumers
 	return nil //ok to remove finalizer
+}
+
+func (r *Reconciler) updateRedisConfig(ctx context.Context, configMap *corev1.ConfigMap) {
+	logging.FromContext(ctx).Info("Reloading Redis configuration")
+	redisConfig, err := GetRedisConfig(configMap.Data)
+	if err != nil {
+		logging.FromContext(ctx).Errorw("Error reading Redis configuration", zap.Error(err))
+	}
+	// For now just override the previous config.
+	r.numConsumers = redisConfig.NumConsumers
 }

@@ -21,6 +21,12 @@ import (
 
 	"github.com/kelseyhightower/envconfig"
 	"k8s.io/client-go/tools/cache"
+
+	"go.uber.org/zap"
+
+	v1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	reconcilersource "knative.dev/eventing/pkg/reconciler/source"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	statefulsetinformer "knative.dev/pkg/client/injection/kube/informers/apps/v1/statefulset"
@@ -28,6 +34,7 @@ import (
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/resolver"
+	"knative.dev/pkg/system"
 
 	"knative.dev/eventing-redis/source/pkg/apis/sources/v1alpha1"
 	redisstreamsourceinformer "knative.dev/eventing-redis/source/pkg/client/injection/informers/sources/v1alpha1/redisstreamsource"
@@ -41,6 +48,8 @@ import (
 type envConfig struct {
 	Image string `envconfig:"STREAMSOURCE_RA_IMAGE" required:"true"`
 }
+
+//Removing watch on Redis config and not reloading numConsumers from CM dynamically since we don't automatically rollout new adapters on watch change. Will scale adapters via replicas
 
 // NewController initializes the controller and is called by the generated code
 // Registers event handlers to enqueue events
@@ -68,6 +77,16 @@ func NewController(
 	impl := redisstreamsourcereconciler.NewImpl(ctx, r)
 
 	r.sinkResolver = resolver.NewURIResolver(ctx, impl.EnqueueKey)
+
+	// Get Redis config map and set Redis configuration, to pass data to receive adapter.
+	// Not rolling out new adapters on watch change. Will scale adapters via replicas at a later time.
+	if _, err := kubeclient.Get(ctx).CoreV1().ConfigMaps(system.Namespace()).Get(ctx, ConfigMapName(), metav1.GetOptions{}); err == nil {
+		cmw.Watch(ConfigMapName(), func(configMap *v1.ConfigMap) {
+			r.updateRedisConfig(ctx, configMap)
+		})
+	} else if !apierrors.IsNotFound(err) {
+		logging.FromContext(ctx).With(zap.Error(err)).Fatal("Error reading ConfigMap'")
+	}
 
 	logging.FromContext(ctx).Info("Setting up event handlers")
 

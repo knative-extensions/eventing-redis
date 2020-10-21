@@ -22,9 +22,8 @@ import (
 type Config struct {
 	adapter.EnvConfig
 
-	Address         string `envconfig:"ADDRESS" required:"true"`
-	Stream          string `envconfig:"STREAM" required:"true"`
-	PodName         string `envconfig:"NAME" required:"true"`
-	MaxPendingCount int    `envconfig:"MAXPENDINGCOUNT" default:"10"`
-	NumConsumers    int    `envconfig:"CONFIG_REDIS_NUMCONSUMERS" default:"5"`
+	Address      string `envconfig:"ADDRESS" required:"true"`
+	Stream       string `envconfig:"STREAM" required:"true"`
+	PodName      string `envconfig:"NAME" required:"true"`
+	NumConsumers string `envconfig:"NUM_CONSUMERS" required:"true"`
 }
