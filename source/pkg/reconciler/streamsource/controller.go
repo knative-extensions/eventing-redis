@@ -49,34 +49,7 @@ type envConfig struct {
 	Image string `envconfig:"STREAMSOURCE_RA_IMAGE" required:"true"`
 }
 
-/*
 //Removing watch on Redis config and not reloading numConsumers from CM dynamically since we don't automatically rollout new adapters on watch change. Will scale adapters via replicas
-func WithRedis(cw *reconcilersource.ConfigWatcher, cmw configmap.Watcher) {
-	cmName := ConfigMapName()
-	obs := updateFromRedisConfigMap
-	if dcmw, ok := cmw.(configmap.DefaultingWatcher); ok {
-		dcmw.WatchWithDefault(corev1.ConfigMap{
-			ObjectMeta: metav1.ObjectMeta{Name: cmName},
-			Data:       map[string]string{},
-		}, obs)
-
-	} else {
-		cmw.Watch(cmName, obs)
-	}
-}
-
-func updateFromRedisConfigMap(cfg *corev1.ConfigMap) {
-	if cfg == nil {
-		return
-	}
-
-	delete(cfg.Data, "_example")
-
-	_, err := NewConfigFromConfigMap(cfg)
-	if err != nil {
-		return
-	}
-} */
 
 // NewController initializes the controller and is called by the generated code
 // Registers event handlers to enqueue events
@@ -105,7 +78,8 @@ func NewController(
 
 	r.sinkResolver = resolver.NewURIResolver(ctx, impl.EnqueueKey)
 
-	// Get Redis config map and set Redis configuration, to pass data to receive adapter
+	// Get Redis config map and set Redis configuration, to pass data to receive adapter.
+	// Not rolling out new adapters on watch change. Will scale adapters via replicas at a later time.
 	if _, err := kubeclient.Get(ctx).CoreV1().ConfigMaps(system.Namespace()).Get(ctx, ConfigMapName(), metav1.GetOptions{}); err == nil {
 		cmw.Watch(ConfigMapName(), func(configMap *v1.ConfigMap) {
 			r.updateRedisConfig(ctx, configMap)

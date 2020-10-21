@@ -108,7 +108,11 @@ func (a *Adapter) Start(ctx context.Context) error {
 
 	}
 
-	numConsumers, _ := strconv.Atoi(a.config.NumConsumers)
+	numConsumers, err := strconv.Atoi(a.config.NumConsumers)
+	if err != nil {
+		a.logger.Error("Cannot convert numConsumers to int", zap.Error(err))
+		return err
+	}
 	a.logger.Info("Number of consumers from config:", zap.Int("NumConsumers", numConsumers))
 
 	for i := 0; i < numConsumers; i++ {
