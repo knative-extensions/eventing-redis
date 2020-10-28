@@ -15,7 +15,6 @@ require (
 	knative.dev/eventing v0.18.1-0.20201028165434-55029a6b4c95
 	knative.dev/pkg v0.0.0-20201028171634-6a24d54694a8
 	knative.dev/serving v0.18.1-0.20201028173034-a8ef33bafcb2
-	knative.dev/test-infra v0.0.0-20201028004634-fe8002e29c05
 )
 
 replace (
