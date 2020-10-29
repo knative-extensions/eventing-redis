@@ -18,8 +18,9 @@ package adapter
 
 import (
 	"context"
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestAdapter_Start(t *testing.T) {
