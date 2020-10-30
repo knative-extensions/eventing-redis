@@ -16,8 +16,8 @@ ko apply -f sink/config
 
 ## Example
 
-In this example, you create one Redis Stream sink for adding items into
-the `mystream` stream.
+In this example, you create one Redis Stream sink for adding items into the
+`mystream` stream.
 
 Install Redis by running this command:
 
@@ -73,4 +73,3 @@ To cleanup, delete the redex namespace:
 ```sh
 kubectl delete ns redex
 ```
-
