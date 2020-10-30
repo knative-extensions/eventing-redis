@@ -1,7 +1,7 @@
 # Redis Components for Knative
 
-Redis Components for Knative support `RedisStreamSource` and 
-`RedisStreamSink` implementations, which offer ways to integrate Knative with 
+Redis Components for Knative support `RedisStreamSource` and `RedisStreamSink`
+implementations, which offer ways to integrate Knative with
 [Redis](https://redis.io)
 
 ## Overview
