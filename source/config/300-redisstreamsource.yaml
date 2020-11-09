@@ -209,10 +209,6 @@ spec:
               status:
                   type: object
                   properties:
-                      Group:
-                          description: Group is the actual name of the consumer group associated
-                              to this source
-                          type: string
                       annotations:
                           description: Annotations is additional Status fields for the Resource
                               to save some additional State as well as convey more information
