@@ -27,7 +27,7 @@ jobs:
         with:
           version: 'v1.19.0'
       - name: Setup kind
-        uses: engineerd/setup-kind@v0.4.0
+        uses: engineered/setup-kind@v0.4.0
         with:
           version: "v0.9.0"
           config: test/kind-config.yaml

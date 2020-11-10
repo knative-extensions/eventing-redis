@@ -5,7 +5,7 @@
 # buildImages => --build-images
 # requirements.must => --requirements-must
 
-# wheter to run the setup phase
+# whether to run the setup phase
 setup: false
 
 # image repository.
