@@ -69,7 +69,7 @@ var (
 	newStackdriverExporterFunc func(sd.Options) (view.Exporter, error)
 
 	// kubeclient is the in-cluster Kubernetes kubeclient, which is lazy-initialized on first use.
-	kubeclient *kubernetes.Clientset
+	kubeclient kubernetes.Interface
 	// initClientOnce is the lazy initializer for kubeclient.
 	initClientOnce sync.Once
 	// kubeclientInitErr capture an error during initClientOnce
@@ -363,7 +363,7 @@ func getStackdriverSecret(ctx context.Context, secretFetcher SecretFetcher) (*co
 	}
 
 	if secErr != nil {
-		return nil, fmt.Errorf("error getting Secret [%v] in namespace [%v]: %v", secretName, secretNamespace, secErr)
+		return nil, fmt.Errorf("error getting Secret [%v] in namespace [%v]: %w", secretName, secretNamespace, secErr)
 	}
 
 	return sec, nil

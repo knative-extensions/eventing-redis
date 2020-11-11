@@ -33,7 +33,7 @@ import (
 // LabelNamespace labels the given namespace with the labels map.
 func (c *Client) LabelNamespace(labels map[string]string) error {
 	namespace := c.Namespace
-	nsSpec, err := c.Kube.Kube.CoreV1().Namespaces().Get(context.Background(), namespace, metav1.GetOptions{})
+	nsSpec, err := c.Kube.CoreV1().Namespaces().Get(context.Background(), namespace, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -43,7 +43,7 @@ func (c *Client) LabelNamespace(labels map[string]string) error {
 	for k, v := range labels {
 		nsSpec.Labels[k] = v
 	}
-	_, err = c.Kube.Kube.CoreV1().Namespaces().Update(context.Background(), nsSpec, metav1.UpdateOptions{})
+	_, err = c.Kube.CoreV1().Namespaces().Update(context.Background(), nsSpec, metav1.UpdateOptions{})
 	return err
 }
 
@@ -72,7 +72,7 @@ func (c *Client) WaitForResourceReadyOrFail(name string, typemeta *metav1.TypeMe
 		if untyped != nil {
 			c.T.Errorf("Object that did not become ready %v-%s when dumping error state: %+v", *typemeta, name, untyped)
 		}
-		c.T.Fatalf("Failed to get %v-%s ready: %+v", *typemeta, name, errors.WithStack(err))
+		c.T.Fatalf("Failed to get %s-%s ready: %+v", typemeta, name, errors.WithStack(err))
 	}
 }
 
