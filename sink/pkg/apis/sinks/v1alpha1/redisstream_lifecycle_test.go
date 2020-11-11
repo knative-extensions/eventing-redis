@@ -100,7 +100,7 @@ func TestRedisStreamSinkStatusIsReady(t *testing.T) {
 			s.PropagateKnativeServiceAddress(knativeservice)
 			return s
 		}(),
-		want: false,
+		want: true,
 	}}
 
 	for _, test := range tests {
