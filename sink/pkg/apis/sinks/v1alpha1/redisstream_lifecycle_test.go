@@ -32,6 +32,12 @@ var (
 	num            = int32(1)
 	knativeservice = &servingv1.Service{
 		Status: servingv1.ServiceStatus{
+			Status: duckv1.Status{
+				Conditions: duckv1.Conditions{{
+					Type:   "Ready",
+					Status: "True",
+				}},
+			},
 			RouteStatusFields: servingv1.RouteStatusFields{
 				Address: &duckv1.Addressable{
 					URL: apis.HTTP("example"),
@@ -136,6 +142,7 @@ func TestRedisStreamSinkStatusGetCondition(t *testing.T) {
 			s := &RedisStreamSinkStatus{}
 			s.InitializeConditions()
 			s.MarkRoleBinding()
+			s.MarkKnativeService()
 			s.PropagateKnativeServiceAddress(knativeservice)
 			return s
 		}(),
@@ -156,10 +163,8 @@ func TestRedisStreamSinkStatusGetCondition(t *testing.T) {
 		}(),
 		condQuery: RedisStreamConditionReady,
 		want: &apis.Condition{
-			Type:    RedisStreamConditionReady,
-			Status:  corev1.ConditionFalse,
-			Reason:  "Testing",
-			Message: "hi",
+			Type:   RedisStreamConditionReady,
+			Status: corev1.ConditionUnknown,
 		},
 	}}
 
