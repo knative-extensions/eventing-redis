@@ -37,8 +37,10 @@ import (
 const (
 	// RedisStreamSourceEventType is the default RedisStreamSource CloudEvent type.
 	RedisStreamSourceEventType = "dev.knative.sources.redisstream"
-	blockms                    = 5000 // block for 5seconds before timing out
-	count                      = 1    //read one redis entry at a time
+	blockms                    = 5000                    // block for 5s before timing out
+	count                      = 1                       // read one redis entry at a time
+	retryNumTimes              = 5                       // maximum number for retries  TODO: Can move this to config?
+	retryWaitPeriod            = 1000 * time.Millisecond // amount of time to wait (1s) TODO: Can move this to config?
 )
 
 func NewEnvConfig() adapter.EnvConfigAccessor {
@@ -168,6 +170,9 @@ func (a *Adapter) Start(ctx context.Context) error {
 }
 
 func (a *Adapter) processEntry(ctx context.Context, conn redis.Conn, streamName string, groupName string, consumerName string, xreadID string, isShuttingDown bool) string {
+	// Retry configuration. Can retry more times to not lose events.
+	ctx = cloudevents.ContextWithRetriesExponentialBackoff(ctx, retryWaitPeriod, retryNumTimes)
+
 	//XREAD reads all the pending messages when xreadID=="0" and new messages when xreadID==">"
 	reply, err := conn.Do("XREADGROUP", "GROUP", groupName, consumerName, "COUNT", count, "BLOCK", blockms, "STREAMS", streamName, xreadID)
 	if err != nil {
