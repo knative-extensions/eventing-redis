@@ -108,6 +108,6 @@ func TestMakeReceive(t *testing.T) {
 	}
 
 	if diff, err := kmp.SafeDiff(want, got); err != nil {
-		t.Errorf("unexpected deploy (-want, +got) = %v", diff)
+		t.Error("unexpected deploy (-want, +got) =", diff)
 	}
 }
