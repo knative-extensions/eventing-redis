@@ -37,10 +37,10 @@ import (
 const (
 	// RedisStreamSourceEventType is the default RedisStreamSource CloudEvent type.
 	RedisStreamSourceEventType = "dev.knative.sources.redisstream"
-	blockms                    = 5000                    // block for 5s before timing out
-	count                      = 1                       // read one redis entry at a time
-	retryNumTimes              = 5                       // maximum number for retries  TODO: Can move this to config?
-	retryWaitPeriod            = 1000 * time.Millisecond // amount of time to wait (1s) TODO: Can move this to config?
+	blockms                    = 5000                  // block for 5s before timing out
+	count                      = 1                     // read one redis entry at a time
+	retryNumTimes              = 5                     // maximum number for retries  TODO: Can move this to config?
+	retryWaitPeriod            = 50 * time.Millisecond // amount of time to wait (50ms) TODO: Can move this to config?
 )
 
 func NewEnvConfig() adapter.EnvConfigAccessor {
