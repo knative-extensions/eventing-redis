@@ -75,7 +75,6 @@ type RedisStreamSourceSpec struct {
 	//
 	// This is a pointer to distinguish between explicit
 	// zero and not specified.
-	// For round-tripping only.
 	// +optional
 	Consumers *int32 `json:"consumers,omitempty"`
 }
@@ -136,7 +135,6 @@ type RedisStreamSourceStatus struct {
 
 	// Total number of consumers actually running in the consumer group.
 	// +optional
-	// For round-tripping only.
 	Consumers int32 `json:"consumers,omitempty"`
 }
 
