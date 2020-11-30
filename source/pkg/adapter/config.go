@@ -24,6 +24,7 @@ type Config struct {
 
 	Address      string `envconfig:"ADDRESS" required:"true"`
 	Stream       string `envconfig:"STREAM" required:"true"`
+	Group        string `envconfig:"GROUP" required:"true"`
 	PodName      string `envconfig:"NAME" required:"true"`
 	NumConsumers string `envconfig:"NUM_CONSUMERS" required:"true"`
 }

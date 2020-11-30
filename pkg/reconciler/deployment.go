@@ -50,6 +50,12 @@ func newDeploymentUpdated(namespace, name string) pkgreconciler.Event {
 	return pkgreconciler.NewEvent(corev1.EventTypeNormal, "DeploymentUpdated", "updated deployment: \"%s/%s\"", namespace, name)
 }
 
+// deploymentScaled makes a new reconciler event with event type Normal, and
+// reason DeploymentScaled
+func deploymentScaled(namespace, name string) pkgreconciler.Event {
+	return pkgreconciler.NewEvent(corev1.EventTypeNormal, "DeploymentScaled", "scaled deployment: \"%s/%s\"", namespace, name)
+}
+
 type DeploymentReconciler struct {
 	KubeClientSet kubernetes.Interface
 }
@@ -73,6 +79,12 @@ func (r *DeploymentReconciler) ReconcileDeployment(ctx context.Context, owner km
 			return ra, err
 		}
 		return ra, newDeploymentUpdated(ra.Namespace, ra.Name)
+	} else if deref(ra.Spec.Replicas) != deref(expected.Spec.Replicas) {
+		ra.Spec.Replicas = expected.Spec.Replicas
+		if ra, err = r.KubeClientSet.AppsV1().Deployments(namespace).Update(ctx, ra, metav1.UpdateOptions{}); err != nil {
+			return ra, err
+		}
+		return ra, deploymentScaled(ra.Namespace, ra.Name)
 	} else {
 		logging.FromContext(ctx).Debugw("Reusing existing receive adapter", zap.Any("receiveAdapter", ra))
 	}
@@ -82,4 +94,11 @@ func (r *DeploymentReconciler) ReconcileDeployment(ctx context.Context, owner km
 // Returns false if an update is needed.
 func (r *DeploymentReconciler) podSpecChanged(expected corev1.PodSpec, now corev1.PodSpec) bool {
 	return !equality.Semantic.DeepDerivative(expected, now)
+}
+
+func deref(i *int32) int32 {
+	if i == nil {
+		return 1
+	}
+	return *i
 }

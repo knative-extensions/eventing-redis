@@ -35,7 +35,6 @@ func AdapterName(source *sourcesv1alpha1.RedisStreamSource) string {
 // MakeReceiveAdapter generates (but does not insert into K8s) the Receive Adapter Deployment for
 // RedisStream Sources.
 func MakeReceiveAdapter(source *sourcesv1alpha1.RedisStreamSource, image string, sinkURI string, numConsumers string) *appsv1.StatefulSet {
-	replicas := int32(1)
 	labels := Labels(source.Name)
 	return &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
@@ -50,7 +49,7 @@ func MakeReceiveAdapter(source *sourcesv1alpha1.RedisStreamSource, image string,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: labels,
 			},
-			Replicas: &replicas,
+			Replicas: source.Spec.Consumers,
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: labels,
@@ -64,6 +63,9 @@ func MakeReceiveAdapter(source *sourcesv1alpha1.RedisStreamSource, image string,
 							Env: []corev1.EnvVar{{
 								Name:  "STREAM",
 								Value: source.Spec.Stream,
+							}, {
+								Name:  "GROUP",
+								Value: source.Spec.Group,
 							}, {
 								Name:  "ADDRESS",
 								Value: source.Spec.Address,

@@ -76,7 +76,10 @@ func (a *Adapter) Start(ctx context.Context) error {
 	}
 
 	streamName := a.config.Stream
-	groupName := a.config.PodName // Build consumer group name from stateful set pod name of adapter
+	groupName := a.config.Group
+	if groupName == "" { //No group was specified in Source Spec
+		groupName = a.config.PodName // Build consumer group name from stateful set pod name of adapter
+	}
 
 	a.logger.Info("Retrieving group info", zap.String("group", groupName))
 	groups, err := scan.ScanXInfoGroupReply(conn.Do("XINFO", "GROUPS", streamName))

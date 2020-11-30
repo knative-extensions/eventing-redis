@@ -50,6 +50,12 @@ func newStatefulSetUpdated(namespace, name string) pkgreconciler.Event {
 	return pkgreconciler.NewEvent(corev1.EventTypeNormal, "StatefulSetUpdated", "updated statefulset: \"%s/%s\"", namespace, name)
 }
 
+// statefulsetScaled makes a new reconciler event with event type Normal, and
+// reason StatefulSetScaled
+func statefulsetScaled(namespace, name string) pkgreconciler.Event {
+	return pkgreconciler.NewEvent(corev1.EventTypeNormal, "StatefulSetScaled", "scaled statefulset: \"%s/%s\"", namespace, name)
+}
+
 type StatefulSetReconciler struct {
 	KubeClientSet kubernetes.Interface
 }
@@ -73,6 +79,12 @@ func (r *StatefulSetReconciler) ReconcileStatefulSet(ctx context.Context, owner 
 			return ra, err
 		}
 		return ra, newStatefulSetUpdated(ra.Namespace, ra.Name)
+	} else if deref(ra.Spec.Replicas) != deref(expected.Spec.Replicas) {
+		ra.Spec.Replicas = expected.Spec.Replicas
+		if ra, err = r.KubeClientSet.AppsV1().StatefulSets(namespace).Update(ctx, ra, metav1.UpdateOptions{}); err != nil {
+			return ra, err
+		}
+		return ra, statefulsetScaled(ra.Namespace, ra.Name)
 	} else {
 		logging.FromContext(ctx).Debugw("Reusing existing receive adapter", zap.Any("receiveAdapter", ra))
 	}
@@ -82,4 +94,11 @@ func (r *StatefulSetReconciler) ReconcileStatefulSet(ctx context.Context, owner 
 // Returns false if an update is needed.
 func (r *StatefulSetReconciler) podSpecChanged(expected corev1.PodSpec, now corev1.PodSpec) bool {
 	return !equality.Semantic.DeepDerivative(expected, now)
+}
+
+func deref(i *int32) int32 {
+	if i == nil {
+		return 1
+	}
+	return *i
 }
