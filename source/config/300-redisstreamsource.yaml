@@ -285,9 +285,8 @@ spec:
                               configured for the Source.
                           type: string
                       consumers:
-                          description: Group is the name of the consumer group associated to
-                              this source. When left empty, a group is automatically created
-                              for this source and deleted when this source is deleted.
+                          description: Consumers is the number of desired consumers
+                              running in the consumer group.
                           type: integer
                           format: int32
       additionalPrinterColumns:
