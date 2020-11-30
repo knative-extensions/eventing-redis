@@ -179,7 +179,7 @@ spec:
                               for this source and deleted when this source is deleted.
                           type: string
                       consumers:
-                          description: Consumers is a pointer to the number of desired consumers 
+                          description: Consumers is a pointer to the number of desired consumers
                               running in the consumer group.
                           type: integer
                           format: int32
