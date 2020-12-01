@@ -29,6 +29,11 @@ spec:
       storage: true
       subresources:
         status: {}
+        scale:
+          # specReplicasPath defines the JSONPath inside of a custom resource that corresponds to Scale.Spec.Replicas.
+          specReplicasPath: .spec.consumers
+          # statusReplicasPath defines the JSONPath inside of a custom resource that corresponds to Scale.Status.Replicas.
+          statusReplicasPath: .status.consumers
       schema:
         openAPIV3Schema:
           type: object
@@ -173,6 +178,11 @@ spec:
                               this source. When left empty, a group is automatically created
                               for this source and deleted when this source is deleted.
                           type: string
+                      consumers:
+                          description: Consumers is a pointer to the number of desired consumers
+                              running in the consumer group.
+                          type: integer
+                          format: int32
                       sink:
                           description: Sink is a reference to an object that will resolve to
                               a uri to use as the sink.
@@ -274,6 +284,11 @@ spec:
                           description: SinkURI is the current active sink URI that has been
                               configured for the Source.
                           type: string
+                      consumers:
+                          description: Consumers is the number of desired consumers
+                              running in the consumer group.
+                          type: integer
+                          format: int32
       additionalPrinterColumns:
         - name: Sink
           type: string
