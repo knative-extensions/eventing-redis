@@ -18,6 +18,8 @@ package adapter
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"strconv"
@@ -28,6 +30,7 @@ import (
 	scan "knative.dev/eventing-redis/source/pkg/redis"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
+	redisParse "github.com/go-redis/redis/v8"
 	"github.com/gomodule/redigo/redis"
 	"go.uber.org/zap"
 	"knative.dev/eventing/pkg/adapter/v2"
@@ -68,7 +71,7 @@ func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClie
 func (a *Adapter) Start(ctx context.Context) error {
 
 	waitGroup := &sync.WaitGroup{}
-	pool := newPool(a.config.Address)
+	pool := a.newPool(a.config.Address)
 
 	conn, err := pool.Dial()
 	if err != nil {
@@ -219,7 +222,12 @@ func (a *Adapter) processEntry(ctx context.Context, conn redis.Conn, streamName 
 	return xreadID
 }
 
-func newPool(address string) *redis.Pool {
+func (a *Adapter) newPool(address string) *redis.Pool {
+	opt, err := redisParse.ParseURL(address)
+	if err != nil {
+		panic(err.Error())
+	}
+
 	return &redis.Pool{
 		// Maximum number of idle connections in the pool.
 		MaxIdle: 80,
@@ -228,9 +236,30 @@ func newPool(address string) *redis.Pool {
 		// Dial is an application supplied function for creating and
 		// configuring a connection.
 		Dial: func() (redis.Conn, error) {
-			c, err := redis.Dial("tcp", address)
-			if err != nil {
-				panic(err.Error())
+			var c redis.Conn
+			if (opt.Password) != "" && a.config.TLSCertificate != "" {
+				roots := x509.NewCertPool()
+				ok := roots.AppendCertsFromPEM([]byte(a.config.TLSCertificate))
+				if !ok {
+					panic(err.Error())
+				}
+				c, err = redis.Dial("tcp", opt.Addr,
+					//redis.DialUsername(opt.Username),
+					redis.DialPassword(opt.Password),
+					redis.DialTLSConfig(&tls.Config{
+						RootCAs: roots,
+					}),
+					redis.DialTLSSkipVerify(true),
+					redis.DialUseTLS(true),
+				)
+				if err != nil {
+					panic(err.Error())
+				}
+			} else {
+				c, err = redis.Dial("tcp", opt.Addr)
+				if err != nil {
+					panic(err.Error())
+				}
 			}
 			return c, err
 		},

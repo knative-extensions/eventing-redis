@@ -85,7 +85,17 @@ func NewController(
 			r.updateRedisConfig(ctx, configMap)
 		})
 	} else if !apierrors.IsNotFound(err) {
-		logging.FromContext(ctx).With(zap.Error(err)).Fatal("Error reading ConfigMap'")
+		logging.FromContext(ctx).With(zap.Error(err)).Info("Error reading Redis ConfigMap'")
+	}
+
+	// Get TLS config map and set TLS certificate, to pass data to receive adapter.
+	// Not rolling out new adapters on watch change.
+	if _, err := kubeclient.Get(ctx).CoreV1().ConfigMaps(system.Namespace()).Get(ctx, TLSConfigMapName(), metav1.GetOptions{}); err == nil {
+		cmw.Watch(TLSConfigMapName(), func(configMap *v1.ConfigMap) {
+			r.updateTLSConfig(ctx, configMap)
+		})
+	} else if !apierrors.IsNotFound(err) {
+		logging.FromContext(ctx).With(zap.Error(err)).Info("Error reading TLS ConfigMap'")
 	}
 
 	logging.FromContext(ctx).Info("Setting up event handlers")

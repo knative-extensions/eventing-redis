@@ -49,6 +49,8 @@ spec:
         - name: STREAMSOURCE_RA_IMAGE
           value: ko://knative.dev/eventing-redis/source/cmd/receive_adapter
         - name: CONFIG_REDIS_NUMCONSUMERS
-          value: config-redis     
+          value: config-redis
+        - name: CONFIG_TLS_TLSCERTIFICATE
+          value: config-tls      
       terminationGracePeriodSeconds: 10
 

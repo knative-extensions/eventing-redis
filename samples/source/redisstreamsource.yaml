@@ -3,10 +3,12 @@ kind: RedisStreamSource
 metadata:
   name: mystream
 spec:
-  address: "redis.redis.svc.cluster.local:6379"
+  address: "rediss://redis.redis.svc.cluster.local:6379"
+  #address: "rediss://$USERNAME:$PASSWORD@7f41ece8-ccb3-43df-b35b-7716e27b222e.b2b5a92ee2df47d58bad0fa448c15585.databases.appdomain.cloud:32086"
   stream: mystream
+  group: mygroup
   sink:
     ref:
       apiVersion: v1
       kind: Service
-      name: event-display
+      name: event-display 
