@@ -11,4 +11,4 @@ spec:
     ref:
       apiVersion: v1
       kind: Service
-      name: event-display 
+      name: event-display
