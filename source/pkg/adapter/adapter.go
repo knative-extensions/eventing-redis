@@ -225,7 +225,7 @@ func (a *Adapter) processEntry(ctx context.Context, conn redis.Conn, streamName 
 func (a *Adapter) newPool(address string) *redis.Pool {
 	opt, err := redisParse.ParseURL(address)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
 	}
 
 	return &redis.Pool{
@@ -237,14 +237,14 @@ func (a *Adapter) newPool(address string) *redis.Pool {
 		// configuring a connection.
 		Dial: func() (redis.Conn, error) {
 			var c redis.Conn
-			if (opt.Password) != "" && a.config.TLSCertificate != "" {
+			if opt.Password != "" && a.config.TLSCertificate != "" {
 				roots := x509.NewCertPool()
 				ok := roots.AppendCertsFromPEM([]byte(a.config.TLSCertificate))
 				if !ok {
-					panic(err.Error())
+					panic(err)
 				}
 				c, err = redis.Dial("tcp", opt.Addr,
-					//redis.DialUsername(opt.Username),
+					//redis.DialUsername(opt.Username), //username needs to be empty for successful redis connection (v8 go-redis issue)
 					redis.DialPassword(opt.Password),
 					redis.DialTLSConfig(&tls.Config{
 						RootCAs: roots,
@@ -253,12 +253,12 @@ func (a *Adapter) newPool(address string) *redis.Pool {
 					redis.DialUseTLS(true),
 				)
 				if err != nil {
-					panic(err.Error())
+					panic(err)
 				}
 			} else {
 				c, err = redis.Dial("tcp", opt.Addr)
 				if err != nil {
-					panic(err.Error())
+					panic(err)
 				}
 			}
 			return c, err
