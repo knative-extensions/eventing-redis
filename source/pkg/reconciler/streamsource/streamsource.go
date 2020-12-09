@@ -63,6 +63,7 @@ type Reconciler struct {
 	sinkResolver        *resolver.URIResolver
 	configs             reconcilersource.ConfigAccessor
 	numConsumers        string
+	tlsCert             string
 }
 
 // Check that our Reconciler implements ReconcileKind.
@@ -102,7 +103,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.
 		return event
 	}
 
-	expectedStatefulSet := resources.MakeReceiveAdapter(source, r.receiveAdapterImage, sinkURI.String(), r.numConsumers)
+	expectedStatefulSet := resources.MakeReceiveAdapter(source, r.receiveAdapterImage, sinkURI.String(), r.numConsumers, r.tlsCert)
 	ra, event := r.ssr.ReconcileStatefulSet(ctx, source, expectedStatefulSet)
 	if ra == nil {
 		if source.Status.Annotations == nil {
@@ -129,4 +130,13 @@ func (r *Reconciler) updateRedisConfig(ctx context.Context, configMap *corev1.Co
 	}
 	// For now just override the previous config.
 	r.numConsumers = redisConfig.NumConsumers
+}
+
+func (r *Reconciler) updateTLSConfig(ctx context.Context, configMap *corev1.ConfigMap) {
+	tlsConfig, err := GetTLSConfig(configMap.Data)
+	if err != nil {
+		logging.FromContext(ctx).Errorw("Error reading TLS configuration", zap.Error(err))
+	}
+	// For now just override the previous config.
+	r.tlsCert = tlsConfig.TLSCertificate
 }
