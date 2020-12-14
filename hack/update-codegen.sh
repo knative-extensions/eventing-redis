@@ -18,21 +18,15 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-export GO111MODULE=on
+source $(dirname $0)/../vendor/knative.dev/hack/codegen-library.sh
+
 # If we run with -mod=vendor here, then generate-groups.sh looks for vendor files in the wrong place.
 export GOFLAGS=-mod=
 
-if [ -z "${GOPATH:-}" ]; then
-  export GOPATH=$(go env GOPATH)
-fi
+echo "=== Update Codegen for $MODULE_NAME"
 
-source $(dirname $0)/../vendor/knative.dev/hack/library.sh
+group "Kubernetes Codegen"
 
-CODEGEN_PKG=${CODEGEN_PKG:-$(cd ${REPO_ROOT_DIR}; ls -d -1 $(dirname $0)/../vendor/k8s.io/code-generator 2>/dev/null || echo ../../../k8s.io/code-generator)}
-
-KNATIVE_CODEGEN_PKG=${KNATIVE_CODEGEN_PKG:-$(cd ${REPO_ROOT_DIR}; ls -d -1 $(dirname $0)/../vendor/knative.dev/pkg 2>/dev/null || echo ../pkg)}
-
-chmod +x ${CODEGEN_PKG}/generate-groups.sh
 # generate the code with:
 # --output-base    because this script should also be able to run inside the vendor dir of
 #                  k8s.io/kubernetes. The output-base is needed for the generators to output into the vendor dir
@@ -47,8 +41,9 @@ ${CODEGEN_PKG}/generate-groups.sh "deepcopy,client,informer,lister" \
   "sinks:v1alpha1" \
   --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate.go.txt
 
+group "Knative Codegen"
+
 # Knative Injection
-chmod +x ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh
 ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
   knative.dev/eventing-redis/source/pkg/client knative.dev/eventing-redis/source/pkg/apis \
   "sources:v1alpha1" \
@@ -58,6 +53,8 @@ ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
   knative.dev/eventing-redis/sink/pkg/client knative.dev/eventing-redis/sink/pkg/apis \
   "sinks:v1alpha1" \
   --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate.go.txt
+
+group "Update deps post-codegen"
 
 # Make sure our dependencies are up-to-date
 ${REPO_ROOT_DIR}/hack/update-deps.sh
