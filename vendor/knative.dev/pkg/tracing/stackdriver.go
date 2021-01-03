@@ -1,3 +1,5 @@
+// +build !nostackdriver
+
 /*
 Copyright 2020 The Knative Authors
 
@@ -14,24 +16,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1
+package tracing
 
 import (
-	"github.com/google/go-cmp/cmp/cmpopts"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	messagingv1 "knative.dev/eventing/pkg/apis/messaging/v1"
-	"knative.dev/pkg/apis"
+	"contrib.go.opencensus.io/exporter/stackdriver"
+	"go.opencensus.io/trace"
+	"knative.dev/pkg/tracing/config"
 )
 
-var (
-	defaultChannelTemplate = &messagingv1.ChannelTemplateSpec{
-		TypeMeta: v1.TypeMeta{
-			APIVersion: SchemeGroupVersion.String(),
-			Kind:       "InMemoryChannel",
-		},
-	}
-	ignoreAllButTypeAndStatus = cmpopts.IgnoreFields(
-		apis.Condition{},
-		"LastTransitionTime", "Message", "Reason", "Severity")
-)
+func newStackdriver(cfg *config.Config) (trace.Exporter, error) {
+	return stackdriver.NewExporter(stackdriver.Options{
+		ProjectID: cfg.StackdriverProjectID,
+	})
+}
