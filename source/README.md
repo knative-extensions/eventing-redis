@@ -4,10 +4,24 @@ Redis Event Source for Knative
 
 ## Getting started
 
+Prior to installing the source, you will need to decide whether you need to add your TLS Certificate that lets you securely connect to your Redis instance (for example, an instance of Redis on IBM Cloud) to the [`config-tls`](config/config-tls.yaml) Config Map. You do not need to do this if you are using a local instance of Redis, as described in the Example section below.
+
+Edit the [`config-tls`](config/config-tls.yaml) Config Map to add TLS Cert to the `cert.pem` data key (if necessary):
+
+```
+vi source/config/config-tls.yaml
+```
+
 Install the source:
 
 ```sh
 ko apply -f source/config
+```
+
+Note: In addition to configuring your TLS Certificate, if you are using a remote instance of Redis, you will need to set the appropriate address in t[`redisstreamsource`](../samples/source/redisstreamsource.yaml) source yaml. Here's an example connection string:
+
+```
+address: "rediss://$USERNAME:$PASSWORD@7f41ece8-ccb3-43df-b35b-7716e27b222e.b2b5a92ee2df47d58bad0fa448c15585.databases.appdomain.cloud:32086"
 ```
 
 ## Example
