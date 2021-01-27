@@ -43,7 +43,7 @@ spec:
         - name: CONFIG_OBSERVABILITY_NAME
           value: config-observability
         - name: METRICS_DOMAIN
-          value: '{"Domain":"knative.dev/eventing","Component":"redisstreamsource","ConfigMap":{"profiling.enable": "true"}}'
+          value: knative.dev/sources
         - name: CONFIG_LEADERELECTION_NAME
           value: config-leader-election-redis
         - name: STREAMSOURCE_RA_IMAGE

@@ -95,6 +95,13 @@ func MakeReceiveAdapter(source *sourcesv1alpha1.RedisStreamSource, image string,
 							}, {
 								Name:  "METRICS_DOMAIN",
 								Value: "knative.dev/eventing",
+							}, {
+								Name: "NAME",
+								ValueFrom: &corev1.EnvVarSource{
+									FieldRef: &corev1.ObjectFieldSelector{
+										FieldPath: "metadata.name",
+									},
+								},
 							}},
 							Ports: []corev1.ContainerPort{{
 								Name:          "metrics",
