@@ -2,7 +2,6 @@
 # or fulfill the requirements in https://github.com/knative/community/blob/master/ROLES.md#approver
 approvers:
 - grantr
-- Harwayne
 - vaikas
 - n3wscott
 - matzew
@@ -16,7 +15,6 @@ approvers:
 # copy the approvers to the reviewers list too.
 reviewers:
 - grantr
-- Harwayne
 - vaikas
 - n3wscott
 - matzew
