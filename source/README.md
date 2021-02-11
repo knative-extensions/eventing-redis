@@ -1,24 +1,24 @@
 # Redis Stream Source
 
 The Redis Stream Event Source for Knative reads messages from a Redis Stream and
-sends them as CloudEvents to the referenced Sink, which can be a Kuberentes service 
-or a Knative Serving service, etc. It is configured to retry sending of CloudEvents 
+sends them as CloudEvents to the referenced Sink, which can be a Kubernetes service
+or a Knative Serving service, etc. It is configured to retry sending of CloudEvents
 so that events are not lost.
 
-The Redis Stream Source can work with a local version of Redis database instance or 
-a cloud based instance whose [`address`](config/300-redisstreamsource.yaml) will be 
-specified in the Source spec. Additionally, the specified [`stream`](config/300-redisstreamsource.yaml) 
-name and consumer [`group`](config/300-redisstreamsource.yaml) name will be 
+The Redis Stream Source can work with a local version of Redis database instance or
+a cloud based instance whose [`address`](config/300-redisstreamsource.yaml) will be
+specified in the Source spec. Additionally, the specified [`stream`](config/300-redisstreamsource.yaml)
+name and consumer [`group`](config/300-redisstreamsource.yaml) name will be
 created by the receive adapter, if they don't already exist.
 
-The number of consumers in the consumer group can also be configured via data in 
+The number of consumers in the consumer group can also be configured via data in
 [`config-redis`](config/config-redis.yaml). This makes it possible for each consumer to
-consume different messages arriving in the stream. Each consumer has an unique consumer 
+consume different messages arriving in the stream. Each consumer has an unique consumer
 name which is a string created by the receive adapter.
 
 When a Redis Stream Source resource is deleted, all the consumers in the group
-are gracefully shut down/deleted, before the consumer group itself is destroyed. 
-Before a consumer is shut down, all its pending messages are sent as CloudEvents and acknowledged. 
+are gracefully shutdown/deleted, before the consumer group itself is destroyed.
+Before a consumer is shut down, all its pending messages are sent as CloudEvents and acknowledged.
 
 
 ## Getting started
@@ -42,7 +42,7 @@ Add your certificate to the file, and save the file. Will be applied in the next
 
 #### Create the `RedisStreamSource` source definition, and all of its components:
 
-You can also, configure the receive adapter with the number of consumers in a group, 
+You can also, configure the receive adapter with the number of consumers in a group,
 prior to installing the event source.
 
 Edit the [`config-redis`](config/config-redis.yaml) Config Map to edit the `numConsumers` data key:
@@ -93,7 +93,7 @@ Then, apply [`samples/source`](../samples/source) which creates an event-display
 kubectl apply -n redex -f samples/source
 ```
 
-4. Verify the Redis Stream Source  is ready:
+4. Verify the Redis Stream Source is ready:
 
 ```sh
 kubectl get  -n redex redisstreamsources.sources.knative.dev mystream
@@ -142,10 +142,10 @@ kubectl delete ns redex
 
 ### Prerequisites
 
-* A Redis installation. Instructions to deploy a local Redis are above. 
-A cloud based Redis can be installed on IBM Cloud (for example), at https://cloud.ibm.com/catalog/services/databases-for-redis
+* A Redis installation. (Instructions to deploy a local Redis are above)
 
-* An understanding of Redis Stream basics: https://redis.io/topics/streams-intro, and some of the commands specific to Streams: https://redis.io/commands#stream
+* An understanding of Redis Stream basics: https://redis.io/topics/streams-intro,
+and some of the commands specific to Streams: https://redis.io/commands#stream.
 
 ### Resource fields
 
@@ -156,7 +156,7 @@ A cloud based Redis can be installed on IBM Cloud (for example), at https://clou
 | ----------- | ----------- |
 | `address`   | The Redis TCP address
 | `stream`    | Name of the Redis stream
-| `group`     | Name of the consumer group associated to this source. When left empty, a group is automatically created for this source and deleted when this source is deleted. {optional} 
+| `group`     | Name of the consumer group associated to this source. When left empty, a group is automatically created for this source and deleted when this source is deleted. {optional}
 | `sink`      | A reference to an `Addressable` Kubernetes object that will resolve to a uri to use as the sink
 
 {optional} These attributes are optional.
