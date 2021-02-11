@@ -134,7 +134,7 @@ The data contains the list of field-value pairs added to the stream.
 7. To cleanup, delete the Redis Stream Source example, and redex namespace:
 
 ```sh
-kubectl delete -f samples/source 
+kubectl delete -f samples/source
 kubectl delete ns redex
 ```
 
