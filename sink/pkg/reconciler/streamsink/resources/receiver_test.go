@@ -36,13 +36,13 @@ func TestMakeReceive(t *testing.T) {
 		},
 		Spec: v1alpha1.RedisStreamSinkSpec{
 			RedisConnection: apisv1alpha1.RedisConnection{
-				Address: "redis.redis.svc.cluster.local:6379",
+				Address: "rediss://redis.redis.svc.cluster.local:6379",
 			},
 			Stream: "mystream",
 		},
 	}
 
-	got := MakeReceiver(src, "test-image")
+	got := MakeReceiver(src, "test-image", "")
 
 	one := int32(1)
 	labels := Labels(src.Name)
@@ -77,6 +77,9 @@ func TestMakeReceive(t *testing.T) {
 								}, {
 									Name:  "ADDRESS",
 									Value: src.Spec.Address,
+								}, {
+									Name:  "TLS_CERTIFICATE",
+									Value: "",
 								}, {
 									Name: "NAMESPACE",
 									ValueFrom: &corev1.EnvVarSource{

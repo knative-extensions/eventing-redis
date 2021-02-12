@@ -20,9 +20,11 @@ import (
 	"context"
 	"encoding/json"
 
+	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
+	"knative.dev/pkg/logging"
 	pkgreconciler "knative.dev/pkg/reconciler"
 
 	eventingresources "knative.dev/eventing/pkg/reconciler/resources"
@@ -53,6 +55,7 @@ type Reconciler struct {
 	sar           *reconciler.ServiceAccountReconciler
 	receiverImage string
 	configs       reconcilersource.ConfigAccessor
+	tlsCert       string
 }
 
 var _ streamsinkreconciler.Interface = (*Reconciler)(nil)
@@ -74,7 +77,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, sink *sinksv1alpha1.Redi
 		return event
 	}
 
-	expectedKService := resources.MakeReceiver(sink, r.receiverImage)
+	expectedKService := resources.MakeReceiver(sink, r.receiverImage, r.tlsCert)
 	ra, event := r.ksr.ReconcileService(ctx, sink, expectedKService)
 	if ra == nil {
 		sink.Status.MarkNoKnativeService(event.Error())
@@ -86,4 +89,13 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, sink *sinksv1alpha1.Redi
 	}
 
 	return nil
+}
+
+func (r *Reconciler) updateTLSConfig(ctx context.Context, configMap *corev1.ConfigMap) {
+	tlsConfig, err := GetTLSConfig(configMap.Data)
+	if err != nil {
+		logging.FromContext(ctx).Errorw("Error reading TLS configuration", zap.Error(err))
+	}
+	// For now just override the previous config.
+	r.tlsCert = tlsConfig.TLSCertificate
 }

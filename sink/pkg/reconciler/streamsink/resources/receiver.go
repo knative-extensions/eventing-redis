@@ -33,7 +33,7 @@ func ReceiverName(source *sinksv1alpha1.RedisStreamSink) string {
 
 // MakeReceiver generates (but does not insert into K8s) the Receiver Knative Service for
 // RedisStreamSinks
-func MakeReceiver(sink *sinksv1alpha1.RedisStreamSink, image string) *servingv1.Service {
+func MakeReceiver(sink *sinksv1alpha1.RedisStreamSink, image string, tlsCert string) *servingv1.Service {
 	labels := Labels(sink.Name)
 	return &servingv1.Service{
 		ObjectMeta: metav1.ObjectMeta{
@@ -60,6 +60,9 @@ func MakeReceiver(sink *sinksv1alpha1.RedisStreamSink, image string) *servingv1.
 									}, {
 										Name:  "ADDRESS",
 										Value: sink.Spec.Address,
+									}, {
+										Name:  "TLS_CERTIFICATE",
+										Value: tlsCert,
 									}, {
 										Name:  "METRICS_DOMAIN",
 										Value: "knative.dev/eventing",

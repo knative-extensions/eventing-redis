@@ -22,6 +22,7 @@ import (
 type Config struct {
 	adapter.EnvConfig
 
-	Address string `envconfig:"ADDRESS" required:"true"`
-	Stream  string `envconfig:"STREAM" required:"true"`
+	Address        string `envconfig:"ADDRESS" required:"true"`
+	Stream         string `envconfig:"STREAM" required:"true"`
+	TLSCertificate string `envconfig:"TLS_CERTIFICATE" required:"true"`
 }
