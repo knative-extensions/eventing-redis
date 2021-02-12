@@ -105,7 +105,7 @@ orange
 7. To cleanup, delete the Redis Stream Sink example, and redex namespace:
 
 ```sh
-kubectl delete -f samples/sink 
+kubectl delete -f samples/sink
 kubectl delete ns redex
 ```
 
@@ -113,7 +113,7 @@ kubectl delete ns redex
 
 ### Prerequisites
 
-* A Redis installation. Instructions to deploy a local Redis are above. 
+* A Redis installation. Instructions to deploy a local Redis are above.
 
 * An understanding of Redis Stream basics: https://redis.io/topics/streams-intro, and some of the commands specific to Streams: https://redis.io/commands#stream
 
@@ -153,7 +153,7 @@ deployment:
 kubectl logs redis-controller-manager-0  -n knative-sinks
 ```
 
-* KO install issues? 
+* KO install issues?
 
 Reference: https://github.com/google/ko/issues/106
 
