@@ -35,7 +35,7 @@ func TestMakeReceiveAdapter(t *testing.T) {
 		},
 		Spec: v1alpha1.RedisStreamSourceSpec{
 			RedisConnection: v1alpha1.RedisConnection{
-				Address: "rediss://redis.redis.svc.cluster.local:6379",
+				Address: "redis.redis.svc.cluster.local:6379",
 			},
 			Stream: "mystream",
 		},
