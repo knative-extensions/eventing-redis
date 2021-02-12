@@ -186,7 +186,7 @@ deployment:
 kubectl logs redis-controller-manager-0  -n knative-sources
 ```
 
-* KO install issues? 
+* KO install issues?
 
 Reference: https://github.com/google/ko/issues/106
 
