@@ -1,4 +1,4 @@
-# Copyright 2018 The Knative Authors
+# Copyright 2019 The Knative Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,17 +13,12 @@
 # limitations under the License.
 
 apiVersion: v1
-kind: Service
+kind: ConfigMap
 metadata:
-  labels:
-    eventing.knative.dev/release: devel
-    role: redis-webhook
-  name: redis-webhook
+  name: config-tls
   namespace: knative-sinks
-spec:
-  ports:
-    - name: https-webhook
-      port: 443
-      targetPort: 8443
-  selector:
-    role: redis-webhook
+data:
+  # Configure the redis pool with the TLS Certificate
+  cert.pem: |+
+    -----BEGIN CERTIFICATE-----
+    -----END CERTIFICATE-----
