@@ -176,8 +176,21 @@ kubectl describe redisstreamsource mystream -n redex
 * You can also read the logs to check for issues with the receive adapter's deployment:
 
 ```
-kubectl logs {podname} -n redex
+kubectl logs redissource-mystream-1234-0 -n redex
 ```
+
+* You can also read the logs to check for issues with the source controller's
+deployment:
+
+```
+kubectl logs redis-controller-manager-0  -n knative-sources
+```
+
+* KO install issues? 
+
+Reference: https://github.com/google/ko/issues/106
+
+Try re-installing KO and setting `export GOROOT=$(go env GOROOT)`
 
 ### Configuration options
 
