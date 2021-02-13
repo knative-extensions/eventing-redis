@@ -5,7 +5,7 @@ them to the specified [`stream`](config/300-redisstreamsink.yaml) of the Redis i
 
 The Redis Stream Sink can work with a local version of Redis database instance or
 a cloud based instance whose [`address`](config/300-redisstreamsink.yaml) will be
-specified in the Sink spec. Additionally, the specified [`stream`](config/300-redisstreamsink.yaml) name will be created by the receive adapter, if they don't already exist.
+specified in the Sink spec. Additionally, the specified [`stream`](config/300-redisstreamsink.yaml) name will be created by the receiver, if they don't already exist.
 
 
 ## Getting started
@@ -20,14 +20,14 @@ specified in the Sink spec. Additionally, the specified [`stream`](config/300-re
 using a cloud instance of Redis (for example, Redis DB on IBM Cloud), a TLS
 certificate will need to be configured, prior to installing the event sink.
 
-Edit the [`config-tls`](config/config-tls.yaml) Config Map to add the TLS Certicate
-from your cloud instance of Redis to the `cert.pem` data key:
+    Edit the [`config-tls`](config/config-tls.yaml) Config Map to add the TLS Certicate
+    from your cloud instance of Redis to the `cert.pem` data key:
 
-```
-vi sink/config/config-tls.yaml
-```
+    ```
+    vi sink/config/config-tls.yaml
+    ```
 
-Add your certificate to the file, and save the file. Will be applied in the next step.
+    Add your certificate to the file, and save the file. Will be applied in the next step.
 
 #### Create the `RedisStreamSink` sink definition, and all of its components:
 
@@ -58,7 +58,7 @@ kubectl create ns redex
 
 Note: In addition to configuring your TLS Certificate, if you are using a cloud
 instance of Redis DB, you will need to set the appropriate address in
-[`redisstreamsink](../samples/sink/redisstreamsink.yaml) sink yaml.
+[`redisstreamsink`](../samples/sink/redisstreamsink.yaml) sink yaml.
 Here's an example connection string:
 
 ```
@@ -139,7 +139,7 @@ kubectl get redisstreamsinks -n redex
 kubectl describe redisstreamsinks mystream -n redex
 ```
 
-* You can also read the logs to check for issues with the receive adapter's deployment:
+* You can also read the logs to check for issues with the receiver's deployment:
 
 ```
 kubectl get pods -n redex
