@@ -20,12 +20,18 @@ import (
 	"context"
 
 	"github.com/kelseyhightower/envconfig"
+	"go.uber.org/zap"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/cache"
+
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
+	"knative.dev/pkg/system"
 
 	serviceclient "knative.dev/serving/pkg/client/injection/client"
 	kserviceinformer "knative.dev/serving/pkg/client/injection/informers/serving/v1/service"
@@ -69,6 +75,16 @@ func NewController(
 	}
 
 	impl := redisstreamssinkreconciler.NewImpl(ctx, r)
+
+	// Get TLS config map and set TLS certificate, to pass data to receiver.
+	// Not rolling out new adapters on watch change.
+	if _, err := kubeclient.Get(ctx).CoreV1().ConfigMaps(system.Namespace()).Get(ctx, TLSConfigMapName(), metav1.GetOptions{}); err == nil {
+		cmw.Watch(TLSConfigMapName(), func(configMap *v1.ConfigMap) {
+			r.updateTLSConfig(ctx, configMap)
+		})
+	} else if !apierrors.IsNotFound(err) {
+		logging.FromContext(ctx).With(zap.Error(err)).Info("Error reading TLS ConfigMap'")
+	}
 
 	logging.FromContext(ctx).Info("Setting up event handlers")
 
