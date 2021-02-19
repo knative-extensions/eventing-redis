@@ -85,7 +85,7 @@ mystream   http://redistreamsinkmystream.redex.svc.cluster.local   35s   True
 5. Send an event to the sink:
 
 ```sh
-curl $(kubectl get ksvc redistreamsinkmystream -ojsonpath='{.status.url}' -n redex) \
+curl $(kubectl get -n redex ksvc redistreamsinkmystream -ojsonpath='{.status.url}' -n redex) \
  -H "ce-specversion: 1.0" \
  -H "ce-type: dev.knative.sources.redisstream" \
  -H "ce-source: cli" \
