@@ -1,0 +1,7 @@
+apiVersion: sinks.knative.dev/v1alpha1
+kind: RedisStreamSink
+metadata:
+  name: mytestsink
+spec:
+  address: "rediss://redis.redis.svc.cluster.local:6379"
+  stream: mystream

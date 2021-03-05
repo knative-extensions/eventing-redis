@@ -24,6 +24,10 @@ components:
       redisstreamsource:
         version: main # from source.
         path: ../..
+    sinks:
+      redisstreamsink:
+        version: main # from sink.
+        path: ../..
 
   event.observer:
     target: log

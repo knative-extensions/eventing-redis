@@ -17,12 +17,19 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"fmt"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/kmeta"
+)
+
+const (
+	// RedisStreamEventType is the RedisStream CloudEvent type.
+	RedisStreamEventType = "dev.knative.redisstreamsource.event"
 )
 
 // +genclient
@@ -150,4 +157,9 @@ type RedisStreamSourceList struct {
 // GetStatus retrieves the status of the RedisStreamSource. Implements the KRShaped interface.
 func (p *RedisStreamSource) GetStatus() *duckv1.Status {
 	return &p.Status.Status
+}
+
+// RedisStreamEventSource returns the RedisStream CloudEvent source.
+func RedisStreamEventSource(namespace, redisStreamSourceName, address string) string {
+	return fmt.Sprintf("/apis/v1/namespaces/%s/redisstreamsources/%s#%s", namespace, redisStreamSourceName, address)
 }
