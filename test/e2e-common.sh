@@ -388,7 +388,7 @@ function test_redisstream_integration() {
     sleep 3
   done
   echo "${progress}"
-  kubectl exec svc/redis -n "${REDIS_NAMESPACE}" redis-cli xinfo stream mystream 
+  kubectl exec svc/redis -n "${REDIS_NAMESPACE}" redis-cli xinfo stream mystream
 
   echo "Confirm the sink for the Redis Stream Source has received the event (Source works!)"
   local iterations=0
