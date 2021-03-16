@@ -22,7 +22,7 @@ receiver, if they don't already exist.
   using a cloud instance of Redis (for example, Redis DB on IBM Cloud), a TLS
   certificate will need to be configured, prior to installing the event sink.
 
-  Edit the [`config-tls`](config/config-tls.yaml) Config Map to add the TLS Certicate
+  Edit the [`config-tls`](config/config-tls.yaml) ConfigMap to add the TLS Certicate
   from your cloud instance of Redis to the `cert.pem` data key:
 
   ```

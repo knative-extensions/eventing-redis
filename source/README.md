@@ -32,7 +32,7 @@ If you are using a local Redis instance, you can skip this step. If you are
 using a cloud instance of Redis (for example, Redis DB on IBM Cloud), a TLS
 certificate will need to be configured, prior to installing the event source.
 
-Edit the [`config-tls`](config/config-tls.yaml) Config Map to add the TLS
+Edit the [`config-tls`](config/config-tls.yaml) ConfigMap to add the TLS
 Certicate from your cloud instance of Redis to the `cert.pem` data key:
 
 ```
@@ -47,7 +47,7 @@ step.
 You can also, configure the receive adapter with the number of consumers in a
 group, prior to installing the event source.
 
-Edit the [`config-redis`](config/config-redis.yaml) Config Map to edit the
+Edit the [`config-redis`](config/config-redis.yaml) ConfigMap to edit the
 `numConsumers` data key:
 
 ```
