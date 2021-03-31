@@ -16,6 +16,6 @@ require (
 	k8s.io/client-go v0.19.7
 	knative.dev/eventing v0.21.1-0.20210330142021-dca8b0acf039
 	knative.dev/hack v0.0.0-20210325223819-b6ab329907d3
-	knative.dev/pkg v0.0.0-20210330073320-3b7934e599fb
-	knative.dev/serving v0.21.1-0.20210330143821-071128592829
+	knative.dev/pkg v0.0.0-20210330162221-808d62257db6
+	knative.dev/serving v0.21.1-0.20210330195521-5813b79342be
 )
