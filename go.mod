@@ -4,7 +4,7 @@ go 1.15
 
 require (
 	github.com/alecthomas/units v0.0.0-20201120081800-1786d5ef83d4 // indirect
-	github.com/cloudevents/sdk-go/v2 v2.3.1
+	github.com/cloudevents/sdk-go/v2 v2.4.0
 	github.com/go-redis/redis/v8 v8.4.2
 	github.com/gomodule/redigo v1.8.3
 	github.com/google/go-cmp v0.5.5
@@ -14,8 +14,8 @@ require (
 	k8s.io/api v0.19.7
 	k8s.io/apimachinery v0.19.7
 	k8s.io/client-go v0.19.7
-	knative.dev/eventing v0.22.0
+	knative.dev/eventing v0.22.1-0.20210407214954-4a3216ca221e
 	knative.dev/hack v0.0.0-20210325223819-b6ab329907d3
-	knative.dev/pkg v0.0.0-20210331065221-952fdd90dbb0
-	knative.dev/serving v0.22.0
+	knative.dev/pkg v0.0.0-20210409013851-4302f33ad42c
+	knative.dev/serving v0.22.1-0.20210409013851-443038cc84e4
 )
