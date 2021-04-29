@@ -14,8 +14,8 @@ require (
 	k8s.io/api v0.19.7
 	k8s.io/apimachinery v0.19.7
 	k8s.io/client-go v0.19.7
-	knative.dev/eventing v0.22.1-0.20210427180853-474fb5b41c3b
-	knative.dev/hack v0.0.0-20210427190353-86f9adc0c8e2
-	knative.dev/pkg v0.0.0-20210428023153-5a308fa62139
-	knative.dev/serving v0.22.1-0.20210428024353-38c791eed0e7
+	knative.dev/eventing v0.22.1-0.20210428222054-c2d6649ea36d
+	knative.dev/hack v0.0.0-20210428122153-93ad9129c268
+	knative.dev/pkg v0.0.0-20210428141353-878c85083565
+	knative.dev/serving v0.22.1-0.20210429080154-1c96334cb5cc
 )
