@@ -244,7 +244,7 @@ func (a *Adapter) newPool(address string) *redis.Pool {
 					panic(err)
 				}
 				c, err = redis.Dial("tcp", opt.Addr,
-					//redis.DialUsername(opt.Username), //username needs to be empty for successful redis connection (v8 go-redis issue)
+					redis.DialUsername(opt.Username),
 					redis.DialPassword(opt.Password),
 					redis.DialTLSConfig(&tls.Config{
 						RootCAs: roots,
