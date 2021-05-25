@@ -82,11 +82,15 @@ kubectl create ns redex
 
 Note: In addition to configuring your TLS Certificate, if you are using a cloud
 instance of Redis DB, you will need to set the appropriate address in
-[`redisstreamsource`](../samples/source/redisstreamsource.yaml) source yaml.
-Here's an example connection string:
+[`redisstreamsource`](../samples/source/redisstreamsource.yaml) source yaml. For redis v5 and older, no username must be specified:
 
 ```
-address: "rediss://$USERNAME:$PASSWORD@7f41ece8-ccb3-43df-b35b-7716e27b222e.b2b5a92ee2df47d58bad0fa448c15585.databases.appdomain.cloud:32086"
+address: "rediss://:password@7f41ece8-ccb3-43df-b35b-7716e27b222e.b2b5a92ee2df47d58bad0fa448c15585.databases.appdomain.cloud:32086"
+```
+
+For redis v6, a username is required:
+```
+address: "rediss://username:password@7f41ece8-ccb3-43df-b35b-7716e27b222e.b2b5a92ee2df47d58bad0fa448c15585.databases.appdomain.cloud:32086"
 ```
 
 Then, apply [`samples/source`](../samples/source) which creates an event-display
