@@ -918,7 +918,6 @@ knative.dev/eventing/pkg/adapter/v2/util/crstatusevent
 knative.dev/eventing/pkg/apis/config
 knative.dev/eventing/pkg/apis/duck
 knative.dev/eventing/pkg/apis/duck/v1
-knative.dev/eventing/pkg/apis/duck/v1alpha1
 knative.dev/eventing/pkg/apis/duck/v1beta1
 knative.dev/eventing/pkg/apis/eventing
 knative.dev/eventing/pkg/apis/eventing/v1
