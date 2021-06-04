@@ -90,8 +90,8 @@ func NewController(
 
 	// Get TLS config map and set TLS certificate, to pass data to receive adapter.
 	// Not rolling out new adapters on watch change.
-	if _, err := kubeclient.Get(ctx).CoreV1().ConfigMaps(system.Namespace()).Get(ctx, TLSConfigMapName(), metav1.GetOptions{}); err == nil {
-		cmw.Watch(TLSConfigMapName(), func(configMap *v1.ConfigMap) {
+	if _, err := kubeclient.Get(ctx).CoreV1().ConfigMaps(system.Namespace()).Get(ctx, TLSSecretName(), metav1.GetOptions{}); err == nil {
+		cmw.Watch(TLSSecretName(), func(configMap *v1.ConfigMap) {
 			r.updateTLSConfig(ctx, configMap)
 		})
 	} else if !apierrors.IsNotFound(err) {
