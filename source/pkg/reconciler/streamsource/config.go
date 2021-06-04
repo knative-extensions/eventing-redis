@@ -27,7 +27,7 @@ const (
 	configMapNameEnv    = "CONFIG_REDIS_NUMCONSUMERS"
 	redisConfigKey      = "numConsumers"
 	DefaultNumConsumers = "10"
-	tlsSecretNameEnv    = "SECRET_TLS_TLSCERTIFICATE"
+	tlsConfigMapNameEnv = "CONFIG_TLS_TLSCERTIFICATE"
 	tlsConfigKey        = "cert.pem"
 )
 
@@ -56,11 +56,11 @@ func ConfigMapName() string {
 	return cm
 }
 
-// TLSSecretName gets the name of the tls cert ConfigMap
-func TLSSecretName() string {
-	cm := os.Getenv(tlsSecretNameEnv)
+// TLSConfigMapName gets the name of the tls cert ConfigMap
+func TLSConfigMapName() string {
+	cm := os.Getenv(tlsConfigMapNameEnv)
 	if cm == "" {
-		return "secret-tls"
+		return "config-tls"
 	}
 	return cm
 }

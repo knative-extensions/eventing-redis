@@ -50,7 +50,7 @@ spec:
           value: ko://knative.dev/eventing-redis/source/cmd/receive_adapter
         - name: CONFIG_REDIS_NUMCONSUMERS
           value: config-redis
-        - name: SECRET_TLS_TLSCERTIFICATE
-          value: tls-secret
+        - name: CONFIG_TLS_TLSCERTIFICATE
+          value: config-tls
       terminationGracePeriodSeconds: 10
 
