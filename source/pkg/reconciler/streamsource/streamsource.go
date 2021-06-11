@@ -132,8 +132,8 @@ func (r *Reconciler) updateRedisConfig(ctx context.Context, configMap *corev1.Co
 	r.numConsumers = redisConfig.NumConsumers
 }
 
-func (r *Reconciler) updateTLSConfig(ctx context.Context, configMap *corev1.ConfigMap) {
-	tlsConfig, err := GetTLSConfig(configMap.Data)
+func (r *Reconciler) updateTLSSecret(ctx context.Context, secret *corev1.Secret) {
+	tlsConfig, err := GetTLSSecret(secret.Data)
 	if err != nil {
 		logging.FromContext(ctx).Errorw("Error reading TLS configuration", zap.Error(err))
 	}
