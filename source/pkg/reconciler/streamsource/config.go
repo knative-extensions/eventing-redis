@@ -60,7 +60,7 @@ func ConfigMapName() string {
 func TLSSecretName() string {
 	cm := os.Getenv(tlsSecretNameEnv)
 	if cm == "" {
-		return "secret-tls"
+		return "tls-secret"
 	}
 	return cm
 }
@@ -112,8 +112,12 @@ func GetTLSSecret(secret map[string][]byte) (*TLSConfig, error) {
 		TLSCertificate: string(secret[tlsConfigKey]),
 	}
 
-	if config == nil {
-		return nil, nil
+	//if config == nil {
+	//	return nil, nil
+	//}
+
+	if config.TLSCertificate == "" {
+		return nil, fmt.Errorf("tls certificate missing from secret")
 	}
 
 	return config, nil
