@@ -47,7 +47,7 @@ step.
 You can also, configure the receive adapter with the number of consumers in a
 group, prior to installing the event source.
 
-Edit the [`config-redis`](config/config-redis.yaml) Config Map to edit the
+Edit the [`config-redis`](config/config-redis.yaml) ConfigMap to edit the
 `numConsumers` data key:
 
 ```
