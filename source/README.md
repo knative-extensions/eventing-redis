@@ -36,7 +36,7 @@ Edit the [`tls-secret`](config/tls-secret.yaml) Secret to add the TLS
 Certificate from your cloud instance of Redis to the `TLS_CERT` data key:
 
 ```
-vi source/config/config-tls.yaml
+vi source/config/tls-secret.yaml
 ```
 
 Add your certificate to the file, and save the file. Will be applied in the next
