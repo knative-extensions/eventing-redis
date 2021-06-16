@@ -32,8 +32,8 @@ If you are using a local Redis instance, you can skip this step. If you are
 using a cloud instance of Redis (for example, Redis DB on IBM Cloud), a TLS
 certificate will need to be configured, prior to installing the event source.
 
-Edit the [`config-tls`](config/config-tls.yaml) Config Map to add the TLS
-Certicate from your cloud instance of Redis to the `cert.pem` data key:
+Edit the [`tls-secret`](config/tls-secret.yaml) Secret to add the TLS
+Certificate from your cloud instance of Redis to the `TLS_CERT` data key:
 
 ```
 vi source/config/config-tls.yaml
