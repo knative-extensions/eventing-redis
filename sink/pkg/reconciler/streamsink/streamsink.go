@@ -91,11 +91,11 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, sink *sinksv1alpha1.Redi
 	return nil
 }
 
-func (r *Reconciler) updateTLSConfig(ctx context.Context, configMap *corev1.ConfigMap) {
-	tlsConfig, err := GetTLSConfig(configMap.Data)
+func (r *Reconciler) updateTLSSecret(ctx context.Context, secret *corev1.Secret) {
+	tlsSecret, err := GetTLSSecret(secret.Data)
 	if err != nil {
 		logging.FromContext(ctx).Errorw("Error reading TLS configuration", zap.Error(err))
 	}
 	// For now just override the previous config.
-	r.tlsCert = tlsConfig.TLSCertificate
+	r.tlsCert = tlsSecret.TLSCertificate
 }
