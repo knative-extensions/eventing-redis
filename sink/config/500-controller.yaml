@@ -48,7 +48,7 @@ spec:
           value: config-leader-election-redis
         - name: STREAMSINK_RA_IMAGE
           value: ko://knative.dev/eventing-redis/sink/cmd/receiver
-        - name: CONFIG_TLS_TLSCERTIFICATE
-          value: config-tls
+        - name: SECRET_TLS_TLSCERTIFICATE
+          value: tls-secret
       terminationGracePeriodSeconds: 10
 

@@ -22,11 +22,10 @@ receiver, if they don't already exist.
   using a cloud instance of Redis (for example, Redis DB on IBM Cloud), a TLS
   certificate will need to be configured, prior to installing the event sink.
 
-      Edit the [`config-tls`](config/config-tls.yaml) Config Map to add the TLS Certicate
-      from your cloud instance of Redis to the `cert.pem` data key:
+      Edit the [`tls-secret`](config/tls-secret.yaml) Secret to add the TLS Certificate from your cloud instance of Redis to the `TLS_CERT` data key:
 
       ```
-      vi sink/config/config-tls.yaml
+      vi sink/config/tls-secret.yaml
       ```
 
       Add your certificate to the file, and save the file. Will be applied in the next step.
@@ -108,7 +107,7 @@ orange
 7. To cleanup, delete the Redis Stream Sink example, and redex namespace:
 
 ```sh
-kubectl delete -f samples/sink
+kubectl delete -f samples/sink -n redex
 kubectl delete ns redex
 ```
 

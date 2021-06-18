@@ -21,7 +21,6 @@ import (
 
 	"github.com/kelseyhightower/envconfig"
 	"go.uber.org/zap"
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/cache"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -76,14 +75,14 @@ func NewController(
 
 	impl := redisstreamssinkreconciler.NewImpl(ctx, r)
 
-	// Get TLS config map and set TLS certificate, to pass data to receiver.
+	// Get TLS secret and set TLS certificate, to pass data to receiver.
 	// Not rolling out new adapters on watch change.
-	if _, err := kubeclient.Get(ctx).CoreV1().ConfigMaps(system.Namespace()).Get(ctx, TLSConfigMapName(), metav1.GetOptions{}); err == nil {
-		cmw.Watch(TLSConfigMapName(), func(configMap *v1.ConfigMap) {
-			r.updateTLSConfig(ctx, configMap)
-		})
+	if secret, err := kubeclient.Get(ctx).CoreV1().Secrets(system.Namespace()).Get(ctx, TLSSecretName(), metav1.GetOptions{}); err == nil {
+
+		r.updateTLSSecret(ctx, secret)
+
 	} else if !apierrors.IsNotFound(err) {
-		logging.FromContext(ctx).With(zap.Error(err)).Info("Error reading TLS ConfigMap'")
+		logging.FromContext(ctx).With(zap.Error(err)).Info("Error reading TLS Secret'")
 	}
 
 	logging.FromContext(ctx).Info("Setting up event handlers")
