@@ -10,12 +10,12 @@ require (
 	github.com/google/go-cmp v0.5.6
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/stretchr/testify v1.7.0
-	go.uber.org/zap v1.17.0
+	go.uber.org/zap v1.18.1
 	k8s.io/api v0.20.7
 	k8s.io/apimachinery v0.20.7
 	k8s.io/client-go v0.20.7
-	knative.dev/eventing v0.24.1-0.20210708130023-221dfdfced62
+	knative.dev/eventing v0.24.1-0.20210713221030-0af15fd14a18
 	knative.dev/hack v0.0.0-20210622141627-e28525d8d260
-	knative.dev/pkg v0.0.0-20210706174620-fe90576475ca
-	knative.dev/serving v0.24.1-0.20210708023522-c9ede02d14ef
+	knative.dev/pkg v0.0.0-20210713175550-7d1b0f19ef71
+	knative.dev/serving v0.24.1-0.20210713213630-69caf0751725
 )
