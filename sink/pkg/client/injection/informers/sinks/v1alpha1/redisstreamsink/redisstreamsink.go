@@ -21,8 +21,15 @@ package redisstreamsink
 import (
 	context "context"
 
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	cache "k8s.io/client-go/tools/cache"
+	apissinksv1alpha1 "knative.dev/eventing-redis/sink/pkg/apis/sinks/v1alpha1"
+	versioned "knative.dev/eventing-redis/sink/pkg/client/clientset/versioned"
 	v1alpha1 "knative.dev/eventing-redis/sink/pkg/client/informers/externalversions/sinks/v1alpha1"
+	client "knative.dev/eventing-redis/sink/pkg/client/injection/client"
 	factory "knative.dev/eventing-redis/sink/pkg/client/injection/informers/factory"
+	sinksv1alpha1 "knative.dev/eventing-redis/sink/pkg/client/listers/sinks/v1alpha1"
 	controller "knative.dev/pkg/controller"
 	injection "knative.dev/pkg/injection"
 	logging "knative.dev/pkg/logging"
@@ -30,6 +37,7 @@ import (
 
 func init() {
 	injection.Default.RegisterInformer(withInformer)
+	injection.Dynamic.RegisterDynamicInformer(withDynamicInformer)
 }
 
 // Key is used for associating the Informer inside the context.Context.
@@ -41,6 +49,11 @@ func withInformer(ctx context.Context) (context.Context, controller.Informer) {
 	return context.WithValue(ctx, Key{}, inf), inf.Informer()
 }
 
+func withDynamicInformer(ctx context.Context) context.Context {
+	inf := &wrapper{client: client.Get(ctx)}
+	return context.WithValue(ctx, Key{}, inf)
+}
+
 // Get extracts the typed informer from the context.
 func Get(ctx context.Context) v1alpha1.RedisStreamSinkInformer {
 	untyped := ctx.Value(Key{})
@@ -49,4 +62,45 @@ func Get(ctx context.Context) v1alpha1.RedisStreamSinkInformer {
 			"Unable to fetch knative.dev/eventing-redis/sink/pkg/client/informers/externalversions/sinks/v1alpha1.RedisStreamSinkInformer from context.")
 	}
 	return untyped.(v1alpha1.RedisStreamSinkInformer)
+}
+
+type wrapper struct {
+	client versioned.Interface
+
+	namespace string
+}
+
+var _ v1alpha1.RedisStreamSinkInformer = (*wrapper)(nil)
+var _ sinksv1alpha1.RedisStreamSinkLister = (*wrapper)(nil)
+
+func (w *wrapper) Informer() cache.SharedIndexInformer {
+	return cache.NewSharedIndexInformer(nil, &apissinksv1alpha1.RedisStreamSink{}, 0, nil)
+}
+
+func (w *wrapper) Lister() sinksv1alpha1.RedisStreamSinkLister {
+	return w
+}
+
+func (w *wrapper) RedisStreamSinks(namespace string) sinksv1alpha1.RedisStreamSinkNamespaceLister {
+	return &wrapper{client: w.client, namespace: namespace}
+}
+
+func (w *wrapper) List(selector labels.Selector) (ret []*apissinksv1alpha1.RedisStreamSink, err error) {
+	lo, err := w.client.SourcesV1alpha1().RedisStreamSinks(w.namespace).List(context.TODO(), v1.ListOptions{
+		LabelSelector: selector.String(),
+		// TODO(mattmoor): Incorporate resourceVersion bounds based on staleness criteria.
+	})
+	if err != nil {
+		return nil, err
+	}
+	for idx := range lo.Items {
+		ret = append(ret, &lo.Items[idx])
+	}
+	return ret, nil
+}
+
+func (w *wrapper) Get(name string) (*apissinksv1alpha1.RedisStreamSink, error) {
+	return w.client.SourcesV1alpha1().RedisStreamSinks(w.namespace).Get(context.TODO(), name, v1.GetOptions{
+		// TODO(mattmoor): Incorporate resourceVersion bounds based on staleness criteria.
+	})
 }
