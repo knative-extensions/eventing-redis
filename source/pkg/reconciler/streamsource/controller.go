@@ -76,7 +76,7 @@ func NewController(
 
 	impl := redisstreamsourcereconciler.NewImpl(ctx, r)
 
-	r.sinkResolver = resolver.NewURIResolver(ctx, impl.EnqueueKey)
+	r.sinkResolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
 
 	// Get Redis config map and set Redis configuration, to pass data to receive adapter.
 	// Not rolling out new adapters on watch change. Will scale adapters via replicas at a later time.
@@ -103,7 +103,7 @@ func NewController(
 	redisstreamSourceInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
 	statefulsetInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterControllerGK(v1alpha1.Kind("RedisStreamSource")),
+		FilterFunc: controller.FilterController(&v1alpha1.RedisStreamSource{}),
 		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
 	})
 
