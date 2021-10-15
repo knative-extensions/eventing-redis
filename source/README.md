@@ -32,11 +32,11 @@ If you are using a local Redis instance, you can skip this step. If you are
 using a cloud instance of Redis (for example, Redis DB on IBM Cloud), a TLS
 certificate will need to be configured, prior to installing the event source.
 
-Edit the [`config-tls`](config/config-tls.yaml) ConfigMap to add the TLS
-Certicate from your cloud instance of Redis to the `cert.pem` data key:
+Edit the [`tls-secret`](config/tls-secret.yaml) Secret to add the TLS
+Certificate from your cloud instance of Redis to the `TLS_CERT` data key:
 
 ```
-vi source/config/config-tls.yaml
+vi source/config/tls-secret.yaml
 ```
 
 Add your certificate to the file, and save the file. Will be applied in the next
@@ -82,11 +82,15 @@ kubectl create ns redex
 
 Note: In addition to configuring your TLS Certificate, if you are using a cloud
 instance of Redis DB, you will need to set the appropriate address in
-[`redisstreamsource`](../samples/source/redisstreamsource.yaml) source yaml.
-Here's an example connection string:
+[`redisstreamsource`](../samples/source/redisstreamsource.yaml) source yaml. For redis v5 and older, no username must be specified:
 
 ```
-address: "rediss://$USERNAME:$PASSWORD@7f41ece8-ccb3-43df-b35b-7716e27b222e.b2b5a92ee2df47d58bad0fa448c15585.databases.appdomain.cloud:32086"
+address: "rediss://:password@7f41ece8-ccb3-43df-b35b-7716e27b222e.b2b5a92ee2df47d58bad0fa448c15585.databases.appdomain.cloud:32086"
+```
+
+For redis v6, a username is required:
+```
+address: "rediss://username:password@7f41ece8-ccb3-43df-b35b-7716e27b222e.b2b5a92ee2df47d58bad0fa448c15585.databases.appdomain.cloud:32086"
 ```
 
 Then, apply [`samples/source`](../samples/source) which creates an event-display
@@ -137,7 +141,7 @@ The data contains the list of field-value pairs added to the stream.
 7. To cleanup, delete the Redis Stream Source example, and redex namespace:
 
 ```sh
-kubectl delete -f samples/source
+kubectl delete -f samples/source -n redex
 kubectl delete ns redex
 ```
 

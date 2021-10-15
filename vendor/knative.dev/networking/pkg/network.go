@@ -25,7 +25,6 @@ import (
 	"net/url"
 	"strings"
 	"text/template"
-	"time"
 
 	lru "github.com/hashicorp/golang-lru"
 	corev1 "k8s.io/api/core/v1"
@@ -65,16 +64,13 @@ const (
 	// customizations for networking features.
 	ConfigName = "config-network"
 
-	// DeprecatedDefaultIngressClassKey  Please use DefaultIngressClassKey instead.
-	DeprecatedDefaultIngressClassKey = "clusteringress.class"
-
 	// DefaultIngressClassKey is the name of the configuration entry
 	// that specifies the default Ingress.
-	DefaultIngressClassKey = "ingress.class"
+	DefaultIngressClassKey = "ingress-class"
 
 	// DefaultCertificateClassKey is the name of the configuration entry
 	// that specifies the default Certificate.
-	DefaultCertificateClassKey = "certificate.class"
+	DefaultCertificateClassKey = "certificate-class"
 
 	// IstioIngressClassName value for specifying knative's Istio
 	// Ingress reconciler.
@@ -87,16 +83,16 @@ const (
 	// DomainTemplateKey is the name of the configuration entry that
 	// specifies the golang template string to use to construct the
 	// Knative service's DNS name.
-	DomainTemplateKey = "domainTemplate"
+	DomainTemplateKey = "domain-template"
 
 	// TagTemplateKey is the name of the configuration entry that
 	// specifies the golang template string to use to construct the
 	// hostname for a Route's tag.
-	TagTemplateKey = "tagTemplate"
+	TagTemplateKey = "tag-template"
 
 	// RolloutDurationKey is the name of the configuration entry
 	// that specifies the default duration of the configuration rollout.
-	RolloutDurationKey = "rolloutDuration"
+	RolloutDurationKey = "rollout-duration"
 
 	// KubeProbeUAPrefix is the user agent prefix of the probe.
 	// Since K8s 1.8, prober requests have
@@ -118,15 +114,15 @@ const (
 
 	// AutocreateClusterDomainClaimsKey is the key for the
 	// AutocreateClusterDomainClaims property.
-	AutocreateClusterDomainClaimsKey = "autocreateClusterDomainClaims"
+	AutocreateClusterDomainClaimsKey = "autocreate-cluster-domain-claims"
 
 	// AutoTLSKey is the name of the configuration entry
 	// that specifies enabling auto-TLS or not.
-	AutoTLSKey = "autoTLS"
+	AutoTLSKey = "auto-tls"
 
 	// HTTPProtocolKey is the name of the configuration entry that
 	// specifies the HTTP endpoint behavior of Knative ingress.
-	HTTPProtocolKey = "httpProtocol"
+	HTTPProtocolKey = "http-protocol"
 
 	// UserAgentKey is the constant for header "User-Agent".
 	UserAgentKey = "User-Agent"
@@ -156,19 +152,16 @@ const (
 	// It has one of the string value "true" or "false".
 	DefaultRouteHeaderName = "Knative-Serving-Default-Route"
 
-	// TagHeaderBasedRoutingKey is the name of the configuration entry
-	// that specifies enabling tag header based routing or not.
-	TagHeaderBasedRoutingKey = "tagHeaderBasedRouting"
-
 	// ProtoAcceptContent is the content type to be used when autoscaler scrapes metrics from the QP
 	ProtoAcceptContent = "application/protobuf"
 
 	// FlushInterval controls the time when we flush the connection in the
 	// reverse proxies (Activator, QP).
-	// NB: having it equal to 0 is a problem for streaming requests
-	// since the data won't be transferred in chunks less than 4kb, if the
-	// reverse proxy fails to detect streaming (gRPC, e.g.).
-	FlushInterval = 20 * time.Millisecond
+	// As of go1.16, a FlushInterval of 0 (the default) still flushes immediately
+	// when Content-Length is -1, which means the default works properly for
+	// streaming/websockets, without flushing more often than necessary for
+	// non-streaming requests.
+	FlushInterval = 0
 
 	// VisibilityLabelKey is the label to indicate visibility of Route
 	// and KServices.  It can be an annotation too but since users are
@@ -180,6 +173,15 @@ const (
 	// load balancers to not load balance the respective request but to
 	// send it to the request's target directly.
 	PassthroughLoadbalancingHeaderName = "K-Passthrough-Lb"
+
+	// EnableMeshPodAddressabilityKey is the config for enabling pod addressability in mesh.
+	EnableMeshPodAddressabilityKey = "enable-mesh-pod-addressability"
+
+	// MeshCompatibilityModeKey is the config for selecting the mesh compatibility mode.
+	MeshCompatibilityModeKey = "mesh-compatibility-mode"
+
+	// DefaultExternalSchemeKey is the config for defining the scheme of external URLs.
+	DefaultExternalSchemeKey = "default-external-scheme"
 )
 
 // DomainTemplateValues are the available properties people can choose from
@@ -239,9 +241,6 @@ type Config struct {
 	// DefaultCertificateClass specifies the default Certificate class.
 	DefaultCertificateClass string
 
-	// TagHeaderBasedRouting specifies if TagHeaderBasedRouting is enabled or not.
-	TagHeaderBasedRouting bool
-
 	// RolloutDurationSecs specifies the default duration for the rollout.
 	RolloutDurationSecs int
 
@@ -251,6 +250,24 @@ type Config struct {
 	// cluster administrator is responsible for pre-creating ClusterDomainClaims
 	// and delegating them to namespaces via their spec.Namespace field.
 	AutocreateClusterDomainClaims bool
+
+	// EnableMeshPodAddressability specifies whether networking plugins will add
+	// additional information to deployed applications to make their pods directl
+	// accessible via their IPs even if mesh is enabled and thus direct-addressability
+	// is usually not possible.
+	// Consumers like Knative Serving can use this setting to adjust their behavior
+	// accordingly, i.e. to drop fallback solutions for non-pod-addressable systems.
+	EnableMeshPodAddressability bool
+
+	// MeshCompatibilityMode specifies whether consumers, such as Knative Serving, should
+	// attempt to directly contact pods via their IP (most efficient), or should
+	// use the Cluster IP (less efficient, but needed if mesh is enabled unless
+	// the EnableMeshPodAddressability option is enabled).
+	MeshCompatibilityMode MeshCompatibilityMode
+
+	// DefaultExternalScheme defines the scheme used in external URLs if AutoTLS is
+	// not enabled. Defaults to "http".
+	DefaultExternalScheme string
 }
 
 // HTTPProtocol indicates a type of HTTP endpoint behavior
@@ -268,6 +285,32 @@ const (
 	HTTPRedirected HTTPProtocol = "redirected"
 )
 
+// MeshCompatibilityMode is one of enabled (always use ClusterIP), disabled
+// (always use Pod IP), or auto (try PodIP, and fall back to ClusterIP if mesh
+// is detected).
+type MeshCompatibilityMode string
+
+const (
+	// MeshCompatibilityModeEnabled instructs consumers of network plugins, such as
+	// Knative Serving, to use ClusterIP when connecting to pods. This is
+	// required when mesh is enabled (unless EnableMeshPodAddressability is set),
+	// but is less efficient.
+	MeshCompatibilityModeEnabled MeshCompatibilityMode = "enabled"
+
+	// MeshCompatibilityModeDisabled instructs consumers of network plugins, such as
+	// Knative Serving, to connect to individual Pod IPs. This is most efficient,
+	// but will only work with mesh enabled when EnableMeshPodAddressability is
+	// used.
+	MeshCompatibilityModeDisabled MeshCompatibilityMode = "disabled"
+
+	// MeshCompatibilityModeAuto instructs consumers of network plugins, such as
+	// Knative Serving, to heuristically determine whether to connect using the
+	// Cluster IP, or to ocnnect to individual Pod IPs. This is most efficient,
+	// determine whether mesh is enabled, and fall back from Direct Pod IP
+	// communication to Cluster IP as needed.
+	MeshCompatibilityModeAuto MeshCompatibilityMode = "auto"
+)
+
 func defaultConfig() *Config {
 	return &Config{
 		DefaultIngressClass:           IstioIngressClassName,
@@ -276,7 +319,9 @@ func defaultConfig() *Config {
 		TagTemplate:                   DefaultTagTemplate,
 		AutoTLS:                       false,
 		HTTPProtocol:                  HTTPEnabled,
-		AutocreateClusterDomainClaims: true,
+		AutocreateClusterDomainClaims: false,
+		DefaultExternalScheme:         "http",
+		MeshCompatibilityMode:         MeshCompatibilityModeAuto,
 	}
 }
 
@@ -290,7 +335,15 @@ func NewConfigFromMap(data map[string]string) (*Config, error) {
 	nc := defaultConfig()
 
 	if err := cm.Parse(data,
-		cm.AsString(DeprecatedDefaultIngressClassKey, &nc.DefaultIngressClass),
+		// Legacy keys
+		cm.AsString("ingress.class", &nc.DefaultIngressClass),
+		cm.AsString("certificate.class", &nc.DefaultCertificateClass),
+		cm.AsString("domainTemplate", &nc.DomainTemplate),
+		cm.AsString("tagTemplate", &nc.TagTemplate),
+		cm.AsInt("rolloutDuration", &nc.RolloutDurationSecs),
+		cm.AsBool("autocreateClusterDomainClaims", &nc.AutocreateClusterDomainClaims),
+		cm.AsString("defaultExternalScheme", &nc.DefaultExternalScheme),
+
 		// New key takes precedence.
 		cm.AsString(DefaultIngressClassKey, &nc.DefaultIngressClass),
 		cm.AsString(DefaultCertificateClassKey, &nc.DefaultCertificateClass),
@@ -298,6 +351,9 @@ func NewConfigFromMap(data map[string]string) (*Config, error) {
 		cm.AsString(TagTemplateKey, &nc.TagTemplate),
 		cm.AsInt(RolloutDurationKey, &nc.RolloutDurationSecs),
 		cm.AsBool(AutocreateClusterDomainClaimsKey, &nc.AutocreateClusterDomainClaims),
+		cm.AsBool(EnableMeshPodAddressabilityKey, &nc.EnableMeshPodAddressability),
+		cm.AsString(DefaultExternalSchemeKey, &nc.DefaultExternalScheme),
+		asMode(MeshCompatibilityModeKey, &nc.MeshCompatibilityMode),
 	); err != nil {
 		return nil, err
 	}
@@ -325,10 +381,22 @@ func NewConfigFromMap(data map[string]string) (*Config, error) {
 	}
 	templateCache.Add(nc.TagTemplate, t)
 
-	nc.AutoTLS = strings.EqualFold(data[AutoTLSKey], "enabled")
-	nc.TagHeaderBasedRouting = strings.EqualFold(data[TagHeaderBasedRoutingKey], "enabled")
+	if val, ok := data["autoTLS"]; ok {
+		nc.AutoTLS = strings.EqualFold(val, "enabled")
+	}
+	if val, ok := data[AutoTLSKey]; ok {
+		nc.AutoTLS = strings.EqualFold(val, "enabled")
+	}
 
-	switch strings.ToLower(data[HTTPProtocolKey]) {
+	var httpProtocol string
+	if val, ok := data["httpProtocol"]; ok {
+		httpProtocol = val
+	}
+	if val, ok := data[HTTPProtocolKey]; ok {
+		httpProtocol = val
+	}
+
+	switch strings.ToLower(httpProtocol) {
 	case "", string(HTTPEnabled):
 		// If HTTPProtocol is not set in the config-network, default is already
 		// set to HTTPEnabled.
@@ -475,4 +543,29 @@ func PortNumberForName(sub corev1.EndpointSubset, portName string) (int32, error
 		}
 	}
 	return 0, fmt.Errorf("no port for name %q found", portName)
+}
+
+// IsPotentialMeshErrorResponse returns whether the HTTP response is compatible
+// with having been caused by attempting direct connection when mesh was
+// enabled. For example if we get a HTTP 404 status code it's safe to assume
+// mesh is not enabled even if a probe was otherwise unsuccessful. This is
+// useful to avoid falling back to ClusterIP when we see errors which are
+// unrelated to mesh being enabled.
+func IsPotentialMeshErrorResponse(resp *http.Response) bool {
+	return resp.StatusCode == http.StatusServiceUnavailable || resp.StatusCode == http.StatusBadGateway
+}
+
+// asMode parses the value at key as a MeshCompatibilityMode into the target, if it exists.
+func asMode(key string, target *MeshCompatibilityMode) cm.ParseFunc {
+	return func(data map[string]string) error {
+		if raw, ok := data[key]; ok {
+			for _, flag := range []MeshCompatibilityMode{MeshCompatibilityModeEnabled, MeshCompatibilityModeDisabled, MeshCompatibilityModeAuto} {
+				if strings.EqualFold(raw, string(flag)) {
+					*target = flag
+					return nil
+				}
+			}
+		}
+		return nil
+	}
 }

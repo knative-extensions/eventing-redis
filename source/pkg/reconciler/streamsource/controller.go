@@ -76,7 +76,7 @@ func NewController(
 
 	impl := redisstreamsourcereconciler.NewImpl(ctx, r)
 
-	r.sinkResolver = resolver.NewURIResolver(ctx, impl.EnqueueKey)
+	r.sinkResolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
 
 	// Get Redis config map and set Redis configuration, to pass data to receive adapter.
 	// Not rolling out new adapters on watch change. Will scale adapters via replicas at a later time.
@@ -88,14 +88,14 @@ func NewController(
 		logging.FromContext(ctx).With(zap.Error(err)).Info("Error reading Redis ConfigMap'")
 	}
 
-	// Get TLS config map and set TLS certificate, to pass data to receive adapter.
+	// Get TLS secret and set TLS certificate, to pass data to receive adapter.
 	// Not rolling out new adapters on watch change.
-	if _, err := kubeclient.Get(ctx).CoreV1().ConfigMaps(system.Namespace()).Get(ctx, TLSConfigMapName(), metav1.GetOptions{}); err == nil {
-		cmw.Watch(TLSConfigMapName(), func(configMap *v1.ConfigMap) {
-			r.updateTLSConfig(ctx, configMap)
-		})
+	if secret, err := kubeclient.Get(ctx).CoreV1().Secrets(system.Namespace()).Get(ctx, TLSSecretName(), metav1.GetOptions{}); err == nil {
+
+		r.updateTLSSecret(ctx, secret)
+
 	} else if !apierrors.IsNotFound(err) {
-		logging.FromContext(ctx).With(zap.Error(err)).Info("Error reading TLS ConfigMap'")
+		logging.FromContext(ctx).With(zap.Error(err)).Info("Error reading TLS Secret'")
 	}
 
 	logging.FromContext(ctx).Info("Setting up event handlers")
@@ -103,7 +103,7 @@ func NewController(
 	redisstreamSourceInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
 	statefulsetInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterControllerGK(v1alpha1.Kind("RedisStreamSource")),
+		FilterFunc: controller.FilterController(&v1alpha1.RedisStreamSource{}),
 		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
 	})
 

@@ -31,6 +31,7 @@ func (source *DeliverySpec) ConvertTo(ctx context.Context, to apis.Convertible) 
 	case *eventingduckv1.DeliverySpec:
 		sink.Retry = source.Retry
 		sink.BackoffDelay = source.BackoffDelay
+		sink.Timeout = source.Timeout
 		if source.BackoffPolicy != nil {
 			if *source.BackoffPolicy == BackoffPolicyLinear {
 				linear := eventingduckv1.BackoffPolicyLinear
@@ -55,6 +56,7 @@ func (sink *DeliverySpec) ConvertFrom(ctx context.Context, from apis.Convertible
 	case *eventingduckv1.DeliverySpec:
 		sink.Retry = source.Retry
 		sink.BackoffDelay = source.BackoffDelay
+		sink.Timeout = source.Timeout
 		if source.BackoffPolicy != nil {
 			if *source.BackoffPolicy == eventingduckv1.BackoffPolicyLinear {
 				linear := BackoffPolicyLinear
@@ -74,24 +76,4 @@ func (sink *DeliverySpec) ConvertFrom(ctx context.Context, from apis.Convertible
 	}
 }
 
-// ConvertTo implements apis.Convertible
-func (source *DeliveryStatus) ConvertTo(ctx context.Context, to apis.Convertible) error {
-	switch sink := to.(type) {
-	case *eventingduckv1.DeliveryStatus:
-		sink.DeadLetterChannel = source.DeadLetterChannel
-		return nil
-	default:
-		return fmt.Errorf("unknown version, got: %T", sink)
-	}
-}
-
-// ConvertFrom implements apis.Convertible
-func (sink *DeliveryStatus) ConvertFrom(ctx context.Context, from apis.Convertible) error {
-	switch source := from.(type) {
-	case *eventingduckv1.DeliveryStatus:
-		sink.DeadLetterChannel = source.DeadLetterChannel
-		return nil
-	default:
-		return fmt.Errorf("unknown version, got: %T", source)
-	}
-}
+// DeliveryStatus v1beta1 is not convertable to v1 (Channel ref type vs URL)

@@ -156,6 +156,9 @@ function wait_until_object_does_not_exist() {
 }
 
 # Waits until all pods are running in the given namespace.
+# This function handles some edge cases that `kubectl wait` does not support,
+# and it provides nice debug info on the state of the pod if it failed,
+# that’s why we have this long bash function instead of using `kubectl wait`.
 # Parameters: $1 - namespace.
 function wait_until_pods_running() {
   echo -n "Waiting until all pods in namespace $1 are up"
@@ -163,7 +166,7 @@ function wait_until_pods_running() {
   for i in {1..150}; do  # timeout after 5 minutes
     # List all pods. Ignore Terminating pods as those have either been replaced through
     # a deployment or terminated on purpose (through chaosduck for example).
-    local pods="$(kubectl get pods --no-headers -n $1 2>/dev/null | grep -v Terminating)"
+    local pods="$(kubectl get pods --no-headers -n $1 | grep -v Terminating)"
     # All pods must be running (ignore ImagePull error to allow the pod to retry)
     local not_running_pods=$(echo "${pods}" | grep -v Running | grep -v Completed | grep -v ErrImagePull | grep -v ImagePullBackOff)
     if [[ -n "${pods}" ]] && [[ -z "${not_running_pods}" ]]; then
@@ -608,6 +611,12 @@ function go_mod_module_name() {
 # Intended to be used like:
 #   export GOPATH=$(go_mod_gopath_hack)
 function go_mod_gopath_hack() {
+    # Skip this if the directory is already checked out onto the GOPATH.
+  if [[ "${REPO_ROOT_DIR##$(go env GOPATH)}" != "$REPO_ROOT_DIR" ]]; then
+    go env GOPATH
+    return
+  fi
+
   local TMP_DIR="$(mktemp -d)"
   local TMP_REPO_PATH="${TMP_DIR}/src/$(go_mod_module_name)"
   mkdir -p "$(dirname "${TMP_REPO_PATH}")" && ln -s "${REPO_ROOT_DIR}" "${TMP_REPO_PATH}"
@@ -634,10 +643,6 @@ function update_licenses() {
   shift
   run_go_tool github.com/google/go-licenses go-licenses save "${dir}" --save_path="${dst}" --force || \
     { echo "--- FAIL: go-licenses failed to update licenses"; return 1; }
-  # Hack to make sure directories retain write permissions after save. This
-  # can happen if the directory being copied is a Go module.
-  # See https://github.com/google/go-licenses/issues/11
-  chmod -R +w "${dst}"
 }
 
 # Run go-licenses to check for forbidden licenses.
@@ -764,9 +769,14 @@ function get_latest_knative_yaml_source() {
 function shellcheck_new_files() {
   declare -a array_of_files
   local failed=0
+
+  if [ -z "$SHELLCHECK_IGNORE_FILES" ]; then
+    SHELLCHECK_IGNORE_FILES="^vendor/"
+  fi
+
   readarray -t array_of_files < <(list_changed_files)
   for filename in "${array_of_files[@]}"; do
-    if echo "${filename}" | grep -q "^vendor/"; then
+    if echo "${filename}" | grep -q "$SHELLCHECK_IGNORE_FILES"; then
       continue
     fi
     if file "${filename}" | grep -q "shell script"; then

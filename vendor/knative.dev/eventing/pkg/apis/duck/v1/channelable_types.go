@@ -59,11 +59,17 @@ type ChannelableStatus struct {
 	// * Conditions - the latest available observations of a resource's current state.
 	duckv1.Status `json:",inline"`
 	// AddressStatus is the part where the Channelable fulfills the Addressable contract.
+	// +optional
 	duckv1.AddressStatus `json:",inline"`
 	// Subscribers is populated with the statuses of each of the Channelable's subscribers.
 	SubscribableStatus `json:",inline"`
+	// DeliveryStatus contains a resolved URL to the dead letter sink address, and any other
+	// resolved delivery options.
+	// +optional
+	DeliveryStatus `json:",inline"`
 	// DeadLetterChannel is a KReference and is set by the channel when it supports native error handling via a channel
 	// Failed messages are delivered here.
+	// Deprecated in favor of DeliveryStatus, to be removed September 2022.
 	// +optional
 	DeadLetterChannel *duckv1.KReference `json:"deadLetterChannel,omitempty"`
 }

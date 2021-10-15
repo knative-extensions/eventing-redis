@@ -27,14 +27,15 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/dynamic"
-	eventingv1beta1 "knative.dev/eventing/pkg/apis/eventing/v1beta1"
+	"k8s.io/client-go/kubernetes"
+	eventingv1 "knative.dev/eventing/pkg/apis/eventing/v1"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	pkgTest "knative.dev/pkg/test"
 )
 
 // ServingClient holds clients required to get serving resources
 type ServingClient struct {
-	Kube    *pkgTest.KubeClient
+	Kube    kubernetes.Interface
 	Dynamic dynamic.Interface
 }
 
@@ -46,8 +47,8 @@ type KServiceRoute struct {
 
 // WithSubscriberKServiceRefForTrigger returns an option that adds a Subscriber
 // Knative Service Ref for the given Trigger.
-func WithSubscriberKServiceRefForTrigger(name string) TriggerOptionV1Beta1 {
-	return func(t *eventingv1beta1.Trigger) {
+func WithSubscriberKServiceRefForTrigger(name string) TriggerOption {
+	return func(t *eventingv1.Trigger) {
 		if name != "" {
 			t.Spec.Subscriber = duckv1.Destination{
 				Ref: KnativeRefForKservice(name, t.Namespace),

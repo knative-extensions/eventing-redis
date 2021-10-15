@@ -27,8 +27,8 @@ const (
 	configMapNameEnv    = "CONFIG_REDIS_NUMCONSUMERS"
 	redisConfigKey      = "numConsumers"
 	DefaultNumConsumers = "10"
-	tlsConfigMapNameEnv = "CONFIG_TLS_TLSCERTIFICATE"
-	tlsConfigKey        = "cert.pem"
+	tlsSecretNameEnv    = "SECRET_TLS_TLSCERTIFICATE"
+	tlsConfigKey        = "TLS_CERT"
 )
 
 // RedisConfig contains the configuration defined in the redis ConfigMap.
@@ -56,11 +56,11 @@ func ConfigMapName() string {
 	return cm
 }
 
-// TLSConfigMapName gets the name of the tls cert ConfigMap
-func TLSConfigMapName() string {
-	cm := os.Getenv(tlsConfigMapNameEnv)
+// TLSSecretName gets the name of the tls cert Secret
+func TLSSecretName() string {
+	cm := os.Getenv(tlsSecretNameEnv)
 	if cm == "" {
-		return "config-tls"
+		return "tls-secret"
 	}
 	return cm
 }
@@ -101,21 +101,19 @@ func GetRedisConfig(configMap map[string]string) (*RedisConfig, error) {
 	return config, nil
 }
 
-// GetTLSConfig returns the details of the TLS certificate.
-func GetTLSConfig(configMap map[string]string) (*TLSConfig, error) {
-	if len(configMap) == 0 {
+// GetTLSSecret returns the details of the TLS certificate.
+func GetTLSSecret(secret map[string][]byte) (*TLSConfig, error) {
+	if len(secret) == 0 {
 		return nil, fmt.Errorf("missing configuration")
 	}
 
+	//Convert byte to a string
 	config := &TLSConfig{
-		TLSCertificate: "",
+		TLSCertificate: string(secret[tlsConfigKey]),
 	}
 
-	err := configmap.Parse(configMap,
-		configmap.AsString(tlsConfigKey, &config.TLSCertificate),
-	)
-	if err != nil {
-		return nil, err
+	if config.TLSCertificate == "" {
+		return nil, fmt.Errorf("tls certificate missing from secret")
 	}
 
 	return config, nil

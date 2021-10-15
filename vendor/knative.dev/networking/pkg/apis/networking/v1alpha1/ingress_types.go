@@ -103,23 +103,16 @@ type IngressSpec struct {
 	// HTTPOption is the option of HTTP. It has the following two values:
 	// `HTTPOptionEnabled`, `HTTPOptionRedirected`
 	HTTPOption HTTPOption `json:"httpOption,omitempty"`
-
-	// DeprecatedVisibility was used for the fallback when spec.rules.visibility
-	// isn't set.
-	//
-	// Now spec.rules.visibility is not optional and so we make this field deprecated.
-	//
-	// +optional
-	DeprecatedVisibility IngressVisibility `json:"visibility,omitempty"`
 }
 
 type HTTPOption string
 
 const (
-	// The knative ingress will be able to serve HTTP connections.
+	// HTTPOptionEnabled defines that the knative ingress will be able to serve HTTP
+	// connections.
 	HTTPOptionEnabled HTTPOption = "Enabled"
-	// The knative will return redirection HTTP status for the clients,
-	// asking the clients to redirect their requests to HTTPS.
+	// HTTPOptionRedirected defines that the knative will return redirection HTTP status
+	// for the clients, asking the clients to redirect their requests to HTTPS.
 	HTTPOptionRedirected HTTPOption = "Redirected"
 )
 
@@ -150,17 +143,12 @@ type IngressTLS struct {
 	SecretName string `json:"secretName,omitempty"`
 
 	// SecretNamespace is the namespace of the secret used to terminate SSL traffic.
+	// If not set the namespace should be assumed to be the same as the Ingress.
+	// If set the secret should have the same namespace as the Ingress otherwise
+	// the behaviour is undefined and not supported.
+	//
+	// +optional
 	SecretNamespace string `json:"secretNamespace,omitempty"`
-
-	// ServerCertificate identifies the certificate filename in the secret.
-	// Defaults to `tls.crt`.
-	// +optional
-	DeprecatedServerCertificate string `json:"serverCertificate,omitempty"`
-
-	// PrivateKey identifies the private key filename in the secret.
-	// Defaults to `tls.key`.
-	// +optional
-	DeprecatedPrivateKey string `json:"privateKey,omitempty"`
 }
 
 // IngressRule represents the rules mapping the paths under a specified host to
@@ -241,18 +229,6 @@ type HTTPIngressPath struct {
 	// NOTE: This differs from K8s Ingress which doesn't allow header appending.
 	// +optional
 	AppendHeaders map[string]string `json:"appendHeaders,omitempty"`
-
-	// DeprecatedTimeout is DEPRECATED.
-	// Timeout is not used anymore. See https://github.com/knative/networking/issues/91
-	//
-	// NOTE: This differs from K8s Ingress which doesn't allow setting timeouts.
-	// +optional
-	DeprecatedTimeout *metav1.Duration `json:"timeout,omitempty"`
-
-	// DeprecatedRetries is DEPRECATED.
-	// Retry in Kingress is not used anymore. See https://github.com/knative/serving/issues/6549
-	// +optional
-	DeprecatedRetries *HTTPRetry `json:"retries,omitempty"`
 }
 
 // IngressBackendSplit describes all endpoints for a given service and port.
@@ -300,11 +276,6 @@ type HTTPRetry struct {
 // IngressStatus describe the current state of the Ingress.
 type IngressStatus struct {
 	duckv1.Status `json:",inline"`
-
-	// DeprecatedLoadBalancer contains the current status of the load-balancer.
-	// DEPRECATED: Use `PublicLoadBalancer` and `PrivateLoadBalancer` instead.
-	// +optional
-	DeprecatedLoadBalancer *LoadBalancerStatus `json:"loadBalancer,omitempty"`
 
 	// PublicLoadBalancer contains the current status of the load-balancer.
 	// +optional

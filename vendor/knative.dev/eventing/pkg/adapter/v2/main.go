@@ -23,6 +23,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
@@ -30,6 +31,7 @@ import (
 	"go.opencensus.io/stats/view"
 	"go.uber.org/zap"
 
+	"knative.dev/eventing/pkg/metrics/source"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/injection"
@@ -39,7 +41,6 @@ import (
 	"knative.dev/pkg/profiling"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/signals"
-	"knative.dev/pkg/source"
 
 	"knative.dev/eventing/pkg/adapter/v2/util/crstatusevent"
 )
@@ -178,6 +179,8 @@ func MainWithInformers(ctx context.Context, component string, env EnvConfigAcces
 		ctx = leaderelection.WithStandardLeaderElectorBuilder(ctx, kubeclient.Get(ctx), *leConfig)
 	}
 
+	wg := sync.WaitGroup{}
+
 	// Create and start controller is needed
 	if ctor := ControllerFromContext(ctx); ctor != nil {
 		ctrl := ctor(ctx, adapter)
@@ -190,13 +193,19 @@ func MainWithInformers(ctx context.Context, component string, env EnvConfigAcces
 		}
 
 		logger.Info("Starting controller")
-		go controller.StartAll(ctx, ctrl)
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			controller.StartAll(ctx, ctrl)
+		}()
 	}
 
 	// Finally start the adapter (blocking)
 	if err := adapter.Start(ctx); err != nil {
 		logger.Fatalw("Start returned an error", zap.Error(err))
 	}
+
+	wg.Wait()
 }
 
 func ConstructEnvOrDie(ector EnvConfigConstructor) EnvConfigAccessor {

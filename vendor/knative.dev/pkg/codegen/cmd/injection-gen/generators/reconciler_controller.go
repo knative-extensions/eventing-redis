@@ -80,9 +80,9 @@ func (g *reconcilerControllerGenerator) GenerateType(c *generator.Context, t *ty
 			Package: "knative.dev/pkg/controller",
 			Name:    "Reconciler",
 		}),
-		"controllerNewImpl": c.Universe.Function(types.Name{
+		"controllerNewContext": c.Universe.Function(types.Name{
 			Package: "knative.dev/pkg/controller",
-			Name:    "NewImpl",
+			Name:    "NewContext",
 		}),
 		"loggingFromContext": c.Universe.Function(types.Name{
 			Package: "knative.dev/pkg/logging",
@@ -134,7 +134,7 @@ func (g *reconcilerControllerGenerator) GenerateType(c *generator.Context, t *ty
 		}),
 		"controllerOptions": c.Universe.Type(types.Name{
 			Package: "knative.dev/pkg/controller",
-			Name:    "Options",
+			Name:    "ControllerOptions",
 		}),
 		"controllerOptionsFn": c.Universe.Type(types.Name{
 			Package: "knative.dev/pkg/controller",
@@ -204,7 +204,7 @@ const (
 // NewImpl returns a {{.controllerImpl|raw}} that handles queuing and feeding work from
 // the queue through an implementation of {{.controllerReconciler|raw}}, delegating to
 // the provided Interface and optional Finalizer methods. OptionsFn is used to return
-// {{.controllerOptions|raw}} to be used but the internal reconciler.
+// {{.controllerOptions|raw}} to be used by the internal reconciler.
 func NewImpl(ctx {{.contextContext|raw}}, r Interface{{if .hasClass}}, classValue string{{end}}, optionsFns ...{{.controllerOptionsFn|raw}}) *{{.controllerImpl|raw}} {
 	logger := {{.loggingFromContext|raw}}(ctx)
 
@@ -217,6 +217,8 @@ func NewImpl(ctx {{.contextContext|raw}}, r Interface{{if .hasClass}}, classValu
 
 	lister := {{.type|lowercaseSingular}}Informer.Lister()
 
+	var promoteFilterFunc func(obj interface{}) bool
+
 	rec := &reconcilerImpl{
 		LeaderAwareFuncs: {{.reconcilerLeaderAwareFuncs|raw}}{
 			PromoteFunc: func(bkt {{.reconcilerBucket|raw}}, enq func({{.reconcilerBucket|raw}}, {{.typesNamespacedName|raw}})) error {
@@ -225,7 +227,11 @@ func NewImpl(ctx {{.contextContext|raw}}, r Interface{{if .hasClass}}, classValu
 					return err
 				}
 				for _, elt := range all {
-					// TODO: Consider letting users specify a filter in options.
+					if promoteFilterFunc != nil {
+						if ok := promoteFilterFunc(elt); !ok {
+							continue
+						}
+					}
 					enq(bkt, {{.typesNamespacedName|raw}}{
 						Namespace: elt.GetNamespace(),
 						Name: elt.GetName(),
@@ -251,7 +257,7 @@ func NewImpl(ctx {{.contextContext|raw}}, r Interface{{if .hasClass}}, classValu
 	)
 
 
-	impl := {{.controllerNewImpl|raw}}(rec, logger, ctrTypeName)
+	impl := {{.controllerNewContext|raw}}(ctx, rec, {{ .controllerOptions|raw }}{WorkQueueName: ctrTypeName, Logger: logger})
 	agentName := defaultControllerAgentName
 
 	// Pass impl to the options. Save any optional results.
@@ -273,6 +279,9 @@ func NewImpl(ctx {{.contextContext|raw}}, r Interface{{if .hasClass}}, classValu
 		{{- end}}
 		if opts.DemoteFunc != nil {
 			rec.DemoteFunc = opts.DemoteFunc
+		}
+		if opts.PromoteFilterFunc != nil {
+			promoteFilterFunc = opts.PromoteFilterFunc
 		}
 	}
 
