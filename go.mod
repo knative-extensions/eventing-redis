@@ -6,7 +6,7 @@ require (
 	github.com/cloudevents/sdk-go/v2 v2.4.1
 	github.com/emicklei/go-restful v2.15.0+incompatible // indirect
 	github.com/go-openapi/spec v0.20.2 // indirect
-	github.com/go-redis/redis/v8 v8.4.2
+	github.com/go-redis/redis/v8 v8.11.4
 	github.com/gomodule/redigo v1.8.3
 	github.com/google/go-cmp v0.5.6
 	github.com/googleapis/gnostic v0.5.3 // indirect
