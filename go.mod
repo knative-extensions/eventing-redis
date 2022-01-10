@@ -3,7 +3,7 @@ module knative.dev/eventing-redis
 go 1.16
 
 require (
-	github.com/cloudevents/sdk-go/v2 v2.7.0
+	github.com/cloudevents/sdk-go/v2 v2.8.0
 	github.com/emicklei/go-restful v2.15.0+incompatible // indirect
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/gomodule/redigo v1.8.3
@@ -14,8 +14,8 @@ require (
 	k8s.io/api v0.22.5
 	k8s.io/apimachinery v0.22.5
 	k8s.io/client-go v0.22.5
-	knative.dev/eventing v0.28.1-0.20220105164433-1ae8a4903521
+	knative.dev/eventing v0.28.1-0.20220107145225-eb4c06c8009d
 	knative.dev/hack v0.0.0-20211222071919-abd085fc43de
 	knative.dev/pkg v0.0.0-20220105211333-96f18522d78d
-	knative.dev/serving v0.28.1-0.20220105183652-719ab3a89a90
+	knative.dev/serving v0.28.1-0.20220107170125-03091748d279
 )
