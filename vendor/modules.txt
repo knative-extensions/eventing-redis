@@ -1003,7 +1003,7 @@ knative.dev/pkg/tracker
 knative.dev/pkg/version
 knative.dev/pkg/webhook
 knative.dev/pkg/webhook/certificates/resources
-# knative.dev/serving v0.29.1-0.20220307224905-f428fa524adc
+# knative.dev/serving v0.29.1-0.20220308061505-604cd185315d
 ## explicit
 knative.dev/serving/pkg/apis/autoscaling
 knative.dev/serving/pkg/apis/autoscaling/v1alpha1
