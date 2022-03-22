@@ -117,7 +117,7 @@ func (c *FakeRedisStreamSinks) UpdateStatus(ctx context.Context, redisStreamSink
 // Delete takes name of the redisStreamSink and deletes it. Returns an error if one occurs.
 func (c *FakeRedisStreamSinks) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(redisstreamsinksResource, c.ns, name), &v1alpha1.RedisStreamSink{})
+		Invokes(testing.NewDeleteActionWithOptions(redisstreamsinksResource, c.ns, name, opts), &v1alpha1.RedisStreamSink{})
 
 	return err
 }
