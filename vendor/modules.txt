@@ -1059,7 +1059,7 @@ knative.dev/eventing/test/lib/duck
 knative.dev/eventing/test/lib/resources
 knative.dev/eventing/test/lib/sender
 knative.dev/eventing/test/test_images
-# knative.dev/hack v0.0.0-20220907111718-6c301965af4c
+# knative.dev/hack v0.0.0-20220908170219-36b2b3c7a245
 ## explicit; go 1.18
 knative.dev/hack
 # knative.dev/networking v0.0.0-20220831065816-215bac90b28b
