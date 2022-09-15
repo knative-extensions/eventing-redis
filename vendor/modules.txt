@@ -275,7 +275,7 @@ github.com/robfig/cron/v3
 # github.com/spf13/pflag v1.0.5
 ## explicit; go 1.12
 github.com/spf13/pflag
-# github.com/stretchr/testify v1.7.0
+# github.com/stretchr/testify v1.8.0
 ## explicit; go 1.13
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
@@ -1019,7 +1019,7 @@ k8s.io/utils/net
 k8s.io/utils/pointer
 k8s.io/utils/strings/slices
 k8s.io/utils/trace
-# knative.dev/eventing v0.34.1-0.20220912074833-e46f4d509d74
+# knative.dev/eventing v0.34.1-0.20220915121905-b8cb60cf89b8
 ## explicit; go 1.18
 knative.dev/eventing/pkg/adapter/v2
 knative.dev/eventing/pkg/adapter/v2/util/crstatusevent
@@ -1069,15 +1069,15 @@ knative.dev/eventing/test/lib/duck
 knative.dev/eventing/test/lib/resources
 knative.dev/eventing/test/lib/sender
 knative.dev/eventing/test/test_images
-# knative.dev/hack v0.0.0-20220914125608-df804190ec5f
+# knative.dev/hack v0.0.0-20220914183605-d1317b08c0c3
 ## explicit; go 1.18
 knative.dev/hack
-# knative.dev/networking v0.0.0-20220909015323-aded181b1709
+# knative.dev/networking v0.0.0-20220914020748-cefed20d561c
 ## explicit; go 1.18
 knative.dev/networking/pkg/apis/networking
 knative.dev/networking/pkg/apis/networking/v1alpha1
 knative.dev/networking/pkg/config
-# knative.dev/pkg v0.0.0-20220914071948-717747b6ba7f
+# knative.dev/pkg v0.0.0-20220914154704-5f66ecf267fe
 ## explicit; go 1.18
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
@@ -1140,7 +1140,7 @@ knative.dev/pkg/tracker
 knative.dev/pkg/version
 knative.dev/pkg/webhook
 knative.dev/pkg/webhook/certificates/resources
-# knative.dev/serving v0.34.1-0.20220914132605-8690e51abdeb
+# knative.dev/serving v0.34.1-0.20220915131205-d6ab4640ebb2
 ## explicit; go 1.18
 knative.dev/serving/pkg/apis/autoscaling
 knative.dev/serving/pkg/apis/autoscaling/v1alpha1
