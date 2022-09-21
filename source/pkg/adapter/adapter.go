@@ -251,12 +251,15 @@ func (a *Adapter) newPool(address string) *redis.Pool {
 					}),
 					redis.DialTLSSkipVerify(true),
 					redis.DialUseTLS(true),
+					redis.DialDatabase(opt.DB),
 				)
 				if err != nil {
 					panic(err)
 				}
 			} else {
-				c, err = redis.Dial("tcp", opt.Addr)
+				c, err = redis.Dial("tcp", opt.Addr,
+					redis.DialDatabase(opt.DB),
+				)
 				if err != nil {
 					panic(err)
 				}
