@@ -18,7 +18,8 @@ package resources
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"knative.dev/eventing-redis/source/pkg/apis/sources/v1alpha1"
+
+	"knative.dev/eventing-redis/pkg/source/apis/sources/v1alpha1"
 )
 
 // RedisStreamSourceOptionV1Alpha1 enables further configuration of a RedisStreamSource.
