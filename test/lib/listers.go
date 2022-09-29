@@ -23,9 +23,9 @@ import (
 	fakeeventingclientset "knative.dev/eventing/pkg/client/clientset/versioned/fake"
 	"knative.dev/pkg/reconciler/testing"
 
-	redissourcev1alpha1 "knative.dev/eventing-redis/source/pkg/apis/sources/v1alpha1"
-	fakeredissourceclientset "knative.dev/eventing-redis/source/pkg/client/clientset/versioned/fake"
-	redissourcev1alpha1listers "knative.dev/eventing-redis/source/pkg/client/listers/sources/v1alpha1"
+	redissourcev1alpha1 "knative.dev/eventing-redis/pkg/source/apis/sources/v1alpha1"
+	fakeredissourceclientset "knative.dev/eventing-redis/pkg/source/client/clientset/versioned/fake"
+	redissourcev1alpha1listers "knative.dev/eventing-redis/pkg/source/client/listers/sources/v1alpha1"
 )
 
 var clientSetSchemes = []func(*runtime.Scheme) error{

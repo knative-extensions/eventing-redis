@@ -24,8 +24,8 @@ export GO111MODULE=on
 # Yaml files to generate, and the source config dir for them.
 declare -A COMPONENTS
 COMPONENTS=(
-  ["redis-source.yaml"]="source/config"
-  ["redis-sink.yaml"]="sink/config"
+  ["redis-source.yaml"]="config/source"
+  ["redis-sink.yaml"]="config/sink"
 )
 readonly COMPONENTS
 
@@ -42,7 +42,7 @@ function build_release() {
   local all_yamls=()
   for yaml in "${!COMPONENTS[@]}"; do
     local config="${COMPONENTS[${yaml}]}"
-    echo "Building Knative Eventing Contrib - ${config}"
+    echo "Building Knative Eventing Redis - ${config}"
     # TODO(chizhg): reenable --strict mode after https://github.com/knative/test-infra/issues/1262 is fixed.
     ko resolve ${KO_FLAGS} -f ${config}/ | "${LABEL_YAML_CMD[@]}" > ${yaml}
     all_yamls+=(${yaml})
