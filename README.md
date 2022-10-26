@@ -11,5 +11,5 @@ implementations, which offer ways to integrate Knative with
 For details about `RedisStreamSource` or `RedisStreamSink`, click on the links
 below:
 
-1. [`RedisStreamSource`](source)
-1. [`RedisStreamSink`](sink)
+1. [`RedisStreamSource`](config/source)
+1. [`RedisStreamSink`](config/sink)
