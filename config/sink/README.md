@@ -1,13 +1,15 @@
 # Redis Stream Sink
 
 The Redis Stream Event Sink for Knative receives CloudEvents and adds them to
-the specified [`stream`](config/300-redisstreamsink.yaml) of the Redis instance.
+the specified [`stream`][redisstreamsink] of the Redis instance.
 
 The Redis Stream Sink can work with a local version of Redis database instance
-or a cloud based instance whose [`address`](config/300-redisstreamsink.yaml)
+or a cloud based instance whose [`address`][redisstreamsink]
 will be specified in the Sink spec. Additionally, the specified
-[`stream`](config/300-redisstreamsink.yaml) name will be created by the
+[`stream`][redisstreamsink] name will be created by the
 receiver, if they don't already exist.
+
+[redisstreamsink]: ./300-redisstreamsink.yaml
 
 ## Getting started
 
@@ -22,20 +24,20 @@ receiver, if they don't already exist.
   using a cloud instance of Redis (for example, Redis DB on IBM Cloud), a TLS
   certificate will need to be configured, prior to installing the event sink.
 
-      Edit the [`tls-secret`](config/tls-secret.yaml) Secret to add the TLS Certificate from your cloud instance of Redis to the `TLS_CERT` data key:
+      Edit the [`tls-secret`](./tls-secret.yaml) Secret to add the TLS Certificate from your cloud instance of Redis to the `TLS_CERT` data key:
 
       ```
-      vi sink/config/tls-secret.yaml
+      vi config/sink/tls-secret.yaml
       ```
 
       Add your certificate to the file, and save the file. Will be applied in the next step.
 
 #### Create the `RedisStreamSink` sink definition, and all of its components:
 
-Apply [`sink/config`](../sink/config)
+Apply [`config/sink`](.)
 
 ```sh
-ko apply -f sink/config
+ko apply -f config/sink
 ```
 
 ### Example
@@ -59,14 +61,14 @@ kubectl create ns redex
 
 Note: In addition to configuring your TLS Certificate, if you are using a cloud
 instance of Redis DB, you will need to set the appropriate address in
-[`redisstreamsink`](../samples/sink/redisstreamsink.yaml) sink yaml. Here's an
+[`redisstreamsink`](../../samples/sink/redisstreamsink.yaml) sink yaml. Here's an
 example connection string:
 
 ```
 address: "rediss://$USERNAME:$PASSWORD@7f41ece8-ccb3-43df-b35b-7716e27b222e.b2b5a92ee2df47d58bad0fa448c15585.databases.appdomain.cloud:32086"
 ```
 
-Then, apply [`samples/sink`](../samples/sink) which creates a Redis Stream Sink
+Then, apply [`samples/sink`](../../samples/sink) which creates a Redis Stream Sink
 resource
 
 ```sh
@@ -167,6 +169,6 @@ Try re-installing KO and setting `export GOROOT=$(go env GOROOT)`
 
 ### Configuration options
 
-The [`config-observability`](config/config-observability.yaml) and
-[`config-logging`](config/config-logging.yaml) ConfigMaps may be used to manage
+The [`config-observability`](./config-observability.yaml) and
+[`config-logging`](./config-logging.yaml) ConfigMaps may be used to manage
 the logging and metrics configuration.
