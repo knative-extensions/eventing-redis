@@ -163,7 +163,7 @@ func ScanXInfoGroupReply(reply interface{}, err error) (StreamGroups, error) {
 			return nil, err
 		}
 
-		if len(entries) != 8 {
+		if len(entries) != 8 && len(entries) != 12 {
 			return nil, fmt.Errorf("unexpected group reply size (%d)", len(entries))
 		}
 
