@@ -6,14 +6,14 @@ service or a Knative Serving service, etc. It is configured to retry sending of
 CloudEvents so that events are not lost.
 
 The Redis Stream Source can work with a local version of Redis database instance
-or a cloud based instance whose [`address`](config/300-redisstreamsource.yaml)
+or a cloud based instance whose [`address`][redisstreamsource]
 will be specified in the Source spec. Additionally, the specified
-[`stream`](config/300-redisstreamsource.yaml) name and consumer
-[`group`](config/300-redisstreamsource.yaml) name will be created by the receive
+[`stream`][redisstreamsource] name and consumer
+[`group`][redisstreamsource] name will be created by the receive
 adapter, if they don't already exist.
 
 The number of consumers in the consumer group can also be configured via data in
-[`config-redis`](config/config-redis.yaml). This makes it possible for each
+[`config-redis`][config-redis]. This makes it possible for each
 consumer to consume different messages arriving in the stream. Each consumer has
 an unique consumer name which is a string created by the receive adapter.
 
@@ -21,6 +21,9 @@ When a Redis Stream Source resource is deleted, all the consumers in the group
 are gracefully shutdown/deleted, before the consumer group itself is destroyed.
 Before a consumer is shut down, all its pending messages are sent as CloudEvents
 and acknowledged.
+
+[redisstreamsource]: ./300-redisstreamsource.yaml
+[config-redis]: ./config-redis.yaml
 
 ## Getting started
 
@@ -32,11 +35,11 @@ If you are using a local Redis instance, you can skip this step. If you are
 using a cloud instance of Redis (for example, Redis DB on IBM Cloud), a TLS
 certificate will need to be configured, prior to installing the event source.
 
-Edit the [`tls-secret`](config/tls-secret.yaml) Secret to add the TLS
+Edit the [`tls-secret`](./tls-secret.yaml) Secret to add the TLS
 Certificate from your cloud instance of Redis to the `TLS_CERT` data key:
 
 ```
-vi source/config/tls-secret.yaml
+vi config/source/tls-secret.yaml
 ```
 
 Add your certificate to the file, and save the file. Will be applied in the next
@@ -47,17 +50,17 @@ step.
 You can also, configure the receive adapter with the number of consumers in a
 group, prior to installing the event source.
 
-Edit the [`config-redis`](config/config-redis.yaml) ConfigMap to edit the
+Edit the [`config-redis`][config-redis] ConfigMap to edit the
 `numConsumers` data key:
 
 ```
-vi source/config/config-redis.yaml
+vi config/source/config-redis.yaml
 ```
 
-Then, apply [`source/config`](../source/config)
+Then, apply [`config/source`](.)
 
 ```sh
-ko apply -f source/config
+ko apply -f config/source
 ```
 
 ### Example
@@ -82,7 +85,7 @@ kubectl create ns redex
 
 Note: In addition to configuring your TLS Certificate, if you are using a cloud
 instance of Redis DB, you will need to set the appropriate address in
-[`redisstreamsource`](../samples/source/redisstreamsource.yaml) source yaml. For redis v5 and older, no username must be specified:
+[`redisstreamsource`](../../samples/source/redisstreamsource.yaml) source yaml. For redis v5 and older, no username must be specified:
 
 ```
 address: "rediss://:password@7f41ece8-ccb3-43df-b35b-7716e27b222e.b2b5a92ee2df47d58bad0fa448c15585.databases.appdomain.cloud:32086"
@@ -93,7 +96,7 @@ For redis v6, a username is required:
 address: "rediss://username:password@7f41ece8-ccb3-43df-b35b-7716e27b222e.b2b5a92ee2df47d58bad0fa448c15585.databases.appdomain.cloud:32086"
 ```
 
-Then, apply [`samples/source`](../samples/source) which creates an event-display
+Then, apply [`samples/source`](../../samples/source) which creates an event-display
 service and a Redis Stream Source resource
 
 ```sh
@@ -194,7 +197,7 @@ kubectl logs redissource-mystream-1234-0 -n redex
   deployment:
 
 ```
-kubectl logs redis-controller-manager-0  -n knative-sources
+kubectl logs redis-controller-manager-0 -n knative-sources
 ```
 
 - KO install issues?
@@ -205,6 +208,6 @@ Try re-installing KO and setting `export GOROOT=$(go env GOROOT)`
 
 ### Configuration options
 
-The [`config-observability`](config/config-observability.yaml) and
-[`config-logging`](config/config-logging.yaml) ConfigMaps may be used to manage
+The [`config-observability`](./config-observability.yaml) and
+[`config-logging`](./config-logging.yaml) ConfigMaps may be used to manage
 the logging and metrics configuration.
