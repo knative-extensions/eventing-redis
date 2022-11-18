@@ -10,13 +10,13 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/stretchr/testify v1.8.0
 	go.uber.org/zap v1.21.0
-	k8s.io/api v0.25.2
-	k8s.io/apimachinery v0.25.2
-	k8s.io/client-go v0.25.2
-	knative.dev/eventing v0.35.1-0.20221110161316-82bf83cd7768
-	knative.dev/hack v0.0.0-20221114224536-b0354624aa29
-	knative.dev/pkg v0.0.0-20221107171117-0243d641354d
-	knative.dev/serving v0.35.1-0.20221114131921-874ccebb8063
+	k8s.io/api v0.25.4
+	k8s.io/apimachinery v0.25.4
+	k8s.io/client-go v0.25.4
+	knative.dev/eventing v0.35.1-0.20221118131140-41653ce64478
+	knative.dev/hack v0.0.0-20221117013839-2e610ce611f8
+	knative.dev/pkg v0.0.0-20221117013641-f5c1a03ab4f1
+	knative.dev/serving v0.35.1-0.20221117190339-7157519076cf
 )
 
 require (
@@ -104,13 +104,13 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/apiextensions-apiserver v0.25.2 // indirect
-	k8s.io/code-generator v0.25.2 // indirect
-	k8s.io/gengo v0.0.0-20220613173612-397b4ae3bce7 // indirect
-	k8s.io/klog/v2 v2.70.2-0.20220707122935-0990e81f1a8f // indirect
+	k8s.io/apiextensions-apiserver v0.25.4 // indirect
+	k8s.io/code-generator v0.25.4 // indirect
+	k8s.io/gengo v0.0.0-20221011193443-fad74ee6edd9 // indirect
+	k8s.io/klog/v2 v2.80.2-0.20221028030830-9ae4992afb54 // indirect
 	k8s.io/kube-openapi v0.0.0-20220803162953-67bda5d908f1 // indirect
-	k8s.io/utils v0.0.0-20220728103510-ee6ede2d64ed // indirect
-	knative.dev/networking v0.0.0-20221104155004-0d4e93709170 // indirect
+	k8s.io/utils v0.0.0-20221108210102-8e77b1f39fe2 // indirect
+	knative.dev/networking v0.0.0-20221115023037-6d96d6934458 // indirect
 	sigs.k8s.io/json v0.0.0-20220713155537-f223a00ba0e2 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
