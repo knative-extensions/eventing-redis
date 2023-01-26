@@ -3,7 +3,7 @@ module knative.dev/eventing-redis
 go 1.18
 
 require (
-	github.com/cloudevents/sdk-go/v2 v2.12.0
+	github.com/cloudevents/sdk-go/v2 v2.13.0
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/gomodule/redigo v1.8.3
 	github.com/google/go-cmp v0.5.8
@@ -13,10 +13,10 @@ require (
 	k8s.io/api v0.25.4
 	k8s.io/apimachinery v0.25.4
 	k8s.io/client-go v0.25.4
-	knative.dev/eventing v0.35.1-0.20221222110658-271c9bb53a52
-	knative.dev/hack v0.0.0-20221209013717-b9801b4f5a4d
-	knative.dev/pkg v0.0.0-20221221230956-4fd6eb8652b7
-	knative.dev/serving v0.35.1-0.20221220012254-3b8f17cd6f97
+	knative.dev/eventing v0.36.0
+	knative.dev/hack v0.0.0-20230113013652-c7cfcb062de9
+	knative.dev/pkg v0.0.0-20230117181655-247510c00e9d
+	knative.dev/serving v0.36.0
 )
 
 require (
@@ -36,8 +36,8 @@ require (
 	github.com/blendle/zapdriver v1.3.1 // indirect
 	github.com/census-instrumentation/opencensus-proto v0.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
-	github.com/cloudevents/sdk-go/observability/opencensus/v2 v2.12.0 // indirect
-	github.com/cloudevents/sdk-go/sql/v2 v2.0.0-20220930150014-52b12276cc4a // indirect
+	github.com/cloudevents/sdk-go/observability/opencensus/v2 v2.13.0 // indirect
+	github.com/cloudevents/sdk-go/sql/v2 v2.13.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/emicklei/go-restful/v3 v3.8.0 // indirect
@@ -110,7 +110,7 @@ require (
 	k8s.io/klog/v2 v2.80.2-0.20221028030830-9ae4992afb54 // indirect
 	k8s.io/kube-openapi v0.0.0-20220803162953-67bda5d908f1 // indirect
 	k8s.io/utils v0.0.0-20221108210102-8e77b1f39fe2 // indirect
-	knative.dev/networking v0.0.0-20221202133217-891aac251fc2 // indirect
+	knative.dev/networking v0.0.0-20230123233838-db2bcbea2560 // indirect
 	sigs.k8s.io/json v0.0.0-20220713155537-f223a00ba0e2 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
