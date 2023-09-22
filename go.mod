@@ -9,14 +9,14 @@ require (
 	github.com/google/go-cmp v0.5.9
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/stretchr/testify v1.8.1
-	go.uber.org/zap v1.25.0
+	go.uber.org/zap v1.26.0
 	k8s.io/api v0.26.5
 	k8s.io/apimachinery v0.26.5
 	k8s.io/client-go v0.26.5
-	knative.dev/eventing v0.38.1-0.20230914134936-ef994bef0a2e
-	knative.dev/hack v0.0.0-20230914013105-0bb79ff2d162
-	knative.dev/pkg v0.0.0-20230914012755-978068686674
-	knative.dev/serving v0.38.1-0.20230914175124-55bec5f5f8ca
+	knative.dev/eventing v0.38.1-0.20230921080814-ceecbb01e116
+	knative.dev/hack v0.0.0-20230921145603-c4a34c34512e
+	knative.dev/pkg v0.0.0-20230920131713-8761ceb9297f
+	knative.dev/serving v0.38.1-0.20230921205527-0d73dfe0f295
 )
 
 require (
@@ -24,7 +24,6 @@ require (
 	contrib.go.opencensus.io/exporter/prometheus v0.4.2 // indirect
 	contrib.go.opencensus.io/exporter/zipkin v0.1.2 // indirect
 	github.com/antlr/antlr4/runtime/Go/antlr v1.4.10 // indirect
-	github.com/benbjohnson/clock v1.3.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
 	github.com/blendle/zapdriver v1.3.1 // indirect
@@ -36,7 +35,7 @@ require (
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/emicklei/go-restful/v3 v3.9.0 // indirect
 	github.com/evanphx/json-patch v4.12.0+incompatible // indirect
-	github.com/evanphx/json-patch/v5 v5.6.0 // indirect
+	github.com/evanphx/json-patch/v5 v5.7.0 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
@@ -86,12 +85,12 @@ require (
 	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/tools v0.13.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
-	google.golang.org/api v0.140.0 // indirect
+	google.golang.org/api v0.141.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230803162519-f966b187b2e5 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20230803162519-f966b187b2e5 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230911183012-2d3300fd4832 // indirect
-	google.golang.org/grpc v1.58.0 // indirect
+	google.golang.org/grpc v1.58.1 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
@@ -102,7 +101,7 @@ require (
 	k8s.io/klog/v2 v2.80.2-0.20221028030830-9ae4992afb54 // indirect
 	k8s.io/kube-openapi v0.0.0-20221012153701-172d655c2280 // indirect
 	k8s.io/utils v0.0.0-20221108210102-8e77b1f39fe2 // indirect
-	knative.dev/networking v0.0.0-20230911132222-48042038ea3d // indirect
+	knative.dev/networking v0.0.0-20230921070414-6aa88055400d // indirect
 	sigs.k8s.io/json v0.0.0-20220713155537-f223a00ba0e2 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
