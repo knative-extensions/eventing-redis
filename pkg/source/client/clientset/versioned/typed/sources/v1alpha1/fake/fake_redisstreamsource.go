@@ -23,7 +23,6 @@ import (
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
-	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	testing "k8s.io/client-go/testing"
@@ -36,9 +35,9 @@ type FakeRedisStreamSources struct {
 	ns   string
 }
 
-var redisstreamsourcesResource = schema.GroupVersionResource{Group: "sources.knative.dev", Version: "v1alpha1", Resource: "redisstreamsources"}
+var redisstreamsourcesResource = v1alpha1.SchemeGroupVersion.WithResource("redisstreamsources")
 
-var redisstreamsourcesKind = schema.GroupVersionKind{Group: "sources.knative.dev", Version: "v1alpha1", Kind: "RedisStreamSource"}
+var redisstreamsourcesKind = v1alpha1.SchemeGroupVersion.WithKind("RedisStreamSource")
 
 // Get takes name of the redisStreamSource, and returns the corresponding redisStreamSource object, and an error if there is any.
 func (c *FakeRedisStreamSources) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.RedisStreamSource, err error) {
