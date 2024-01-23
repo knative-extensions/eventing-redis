@@ -2,8 +2,6 @@ module knative.dev/eventing-redis
 
 go 1.21
 
-toolchain go1.21.4
-
 require (
 	github.com/cloudevents/sdk-go/v2 v2.13.0
 	github.com/go-redis/redis/v8 v8.11.4
