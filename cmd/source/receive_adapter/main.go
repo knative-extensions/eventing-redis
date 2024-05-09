@@ -18,10 +18,14 @@ package main
 
 import (
 	"knative.dev/eventing/pkg/adapter/v2"
+	"knative.dev/pkg/signals"
 
 	kadapter "knative.dev/eventing-redis/pkg/source/adapter"
 )
 
 func main() {
-	adapter.Main("redis-stream-source", kadapter.NewEnvConfig, kadapter.NewAdapter)
+	ctx := signals.NewContext()
+	ctx = adapter.WithInjectorEnabled(ctx)
+
+	adapter.MainWithContext(ctx, "redis-stream-source", kadapter.NewEnvConfig, kadapter.NewAdapter)
 }
