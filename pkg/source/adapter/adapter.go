@@ -237,7 +237,7 @@ func (a *Adapter) newPool(address string) *redis.Pool {
 		// configuring a connection.
 		Dial: func() (redis.Conn, error) {
 			var c redis.Conn
-			if opt.Password != "" && a.config.TLSCertificate != "" {
+			if a.config.TLSCertificate != "" {
 				roots := x509.NewCertPool()
 				ok := roots.AppendCertsFromPEM([]byte(a.config.TLSCertificate))
 				if !ok {
