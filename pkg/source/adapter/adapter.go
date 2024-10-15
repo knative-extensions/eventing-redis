@@ -186,6 +186,9 @@ func (a *Adapter) processEntry(ctx context.Context, conn redis.Conn, streamName 
 		if !isShuttingDown {
 			time.Sleep(1 * time.Second)
 		}
+		if strings.Contains(strings.ToLower(err.Error()), "use of closed network connection") {
+			panic(err)
+		}
 		return xreadID
 	}
 
