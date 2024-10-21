@@ -95,7 +95,8 @@ func (r *Reconciler) updateTLSSecret(ctx context.Context, secret *corev1.Secret)
 	tlsSecret, err := GetTLSSecret(secret.Data)
 	if err != nil {
 		logging.FromContext(ctx).Errorw("Error reading TLS configuration", zap.Error(err))
+	} else {
+		// For now just override the previous config.
+		r.tlsCert = tlsSecret.TLSCertificate
 	}
-	// For now just override the previous config.
-	r.tlsCert = tlsSecret.TLSCertificate
 }
