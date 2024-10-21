@@ -183,6 +183,9 @@ func (a *Adapter) processEntry(ctx context.Context, conn redis.Conn, streamName 
 	reply, err := conn.Do("XREADGROUP", "GROUP", groupName, consumerName, "COUNT", count, "BLOCK", blockms, "STREAMS", streamName, xreadID)
 	if err != nil {
 		a.logger.Error("Cannot read from stream", zap.Error(err))
+		if strings.Contains(strings.ToLower(err.Error()), "use of closed network connection") { // Redis has probably been shut down
+			panic("Redis has been shut down")
+		}
 		if !isShuttingDown {
 			time.Sleep(1 * time.Second)
 		}
