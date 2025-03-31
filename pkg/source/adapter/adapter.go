@@ -241,7 +241,7 @@ func (a *Adapter) newPool(address string) *redis.Pool {
 				roots := x509.NewCertPool()
 				ok := roots.AppendCertsFromPEM([]byte(a.config.TLSCertificate))
 				if !ok {
-					panic(err)
+					panic("cannot add tls certificate to cert pool")
 				}
 				c, err = redis.Dial("tcp", opt.Addr,
 					redis.DialUsername(opt.Username),
