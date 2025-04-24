@@ -1101,7 +1101,6 @@ knative.dev/eventing/pkg/metrics
 knative.dev/eventing/pkg/metrics/source
 knative.dev/eventing/pkg/observability
 knative.dev/eventing/pkg/observability/client
-knative.dev/eventing/pkg/reconciler/resources
 knative.dev/eventing/pkg/reconciler/source
 # knative.dev/hack v0.0.0-20250331013814-c577ed9f7775
 ## explicit; go 1.21

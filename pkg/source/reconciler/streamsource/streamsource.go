@@ -29,7 +29,7 @@ import (
 	pkgreconciler "knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 
-	eventingresources "knative.dev/eventing/pkg/reconciler/resources"
+	eventingresources "knative.dev/eventing-redis/pkg/reconciler/resources"
 	reconcilersource "knative.dev/eventing/pkg/reconciler/source"
 
 	sourcesv1alpha1 "knative.dev/eventing-redis/pkg/source/apis/sources/v1alpha1"
