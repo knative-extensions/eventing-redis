@@ -27,7 +27,7 @@ import (
 	"knative.dev/pkg/logging"
 	pkgreconciler "knative.dev/pkg/reconciler"
 
-	eventingresources "knative.dev/eventing/pkg/reconciler/resources"
+	eventingresources "knative.dev/eventing-redis/pkg/reconciler/resources"
 	reconcilersource "knative.dev/eventing/pkg/reconciler/source"
 
 	"knative.dev/eventing-redis/pkg/reconciler"
