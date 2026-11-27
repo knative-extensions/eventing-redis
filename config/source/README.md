@@ -92,6 +92,7 @@ address: "rediss://:password@7f41ece8-ccb3-43df-b35b-7716e27b222e.b2b5a92ee2df47
 ```
 
 For redis v6, a username is required:
+
 ```
 address: "rediss://username:password@7f41ece8-ccb3-43df-b35b-7716e27b222e.b2b5a92ee2df47d58bad0fa448c15585.databases.appdomain.cloud:32086"
 ```
